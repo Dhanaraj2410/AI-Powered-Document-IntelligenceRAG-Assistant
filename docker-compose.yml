@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - rag_data:/app/data
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=django-insecure-docker-key-2026
+      - OPENAI_MODEL=gpt-4o-mini
+    restart: always
+
+volumes:
+  rag_data:
