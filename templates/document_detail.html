@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ document.title }} — Document Detail{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb & Back -->
+    <div class="mb-3">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-info btn-sm rounded-pill"><i class="bi bi-arrow-left me-1"></i> Back to Dashboard</a>
+    </div>
+
+    <!-- Document Info Card -->
+    <div class="glass-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <h3 class="fw-bold mb-3 text-light"><i class="bi bi-file-pdf text-danger me-2"></i> {{ document.title }}</h3>
+                <div class="d-flex gap-3 text-light small flex-wrap">
+                    <span class="badge bg-secondary px-3 py-2 text-light"><i class="bi bi-file-earmark me-1 text-info"></i> {{ document.page_count }} Pages</span>
+                    <span class="badge bg-primary bg-opacity-20 text-primary border border-primary px-3 py-2"><i class="bi bi-cpu me-1"></i> {{ document.chunk_count }} Vector Chunks</span>
+                    <span class="badge bg-info bg-opacity-20 text-info border border-info px-3 py-2"><i class="bi bi-hdd me-1"></i> {{ document.file_size|filesizeformat }}</span>
+                    <span class="badge bg-dark border border-secondary px-3 py-2 text-light"><i class="bi bi-calendar3 me-1 text-warning"></i> {{ document.created_at|date:"M d, Y H:i" }}</span>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'chat' %}?doc_id={{ document.id }}" class="btn btn-info rounded-pill text-dark fw-bold px-4 py-2">
+                    <i class="bi bi-chat-text-fill me-1"></i> Open RAG Chat
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Document Analysis & Suggested Questions Card -->
+    <div class="glass-card p-4 mb-4">
+        <h5 class="fw-bold mb-2 gradient-text"><i class="bi bi-lightbulb text-info me-2"></i> AI Document Analysis & Suggested Questions</h5>
+        <p class="text-light small mb-3">Intelligent questions automatically analyzed and generated from the contents of this document:</p>
+        
+        <div class="row g-3" id="suggestedQuestionsContainer">
+            {% if document.suggested_questions %}
+                {% for q in document.suggested_questions %}
+                <div class="col-md-6">
+                    <div class="p-3 bg-dark rounded border border-secondary d-flex justify-content-between align-items-center h-100 shadow-sm">
+                        <span class="small text-light fw-bold me-2" style="font-size: 0.9rem;"><i class="bi bi-question-circle-fill text-info me-2"></i>{{ q }}</span>
+                        <a href="{% url 'chat' %}?doc_id={{ document.id }}&q={{ q|urlencode }}" class="btn btn-info btn-sm rounded-pill text-dark fw-bold flex-shrink-0 px-3">
+                            Ask <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12 text-light small">No suggested questions generated yet. Click "Reprocess" on the dashboard to analyze.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Multi-mode Document Summarizer Section -->
+    <div class="glass-card p-4 mb-4">
+        <h5 class="fw-bold mb-3 text-light"><i class="bi bi-magic text-info me-2"></i> Multi-Mode Document Summarizer</h5>
+        <div class="row align-items-center mb-3 g-3">
+            <div class="col-md-6">
+                <label class="form-label small text-light fw-semibold">Select Summary Mode</label>
+                <select id="summaryModeSelect" class="form-select bg-dark text-light border-secondary">
+                    <option value="executive">Executive Summary (Overview & Conclusions)</option>
+                    <option value="key_points">Key Points & Core Takeaways</option>
+                    <option value="technical">Technical Methodology & Specifications</option>
+                    <option value="risks">Major Risks, Concerns & Action Items</option>
+                </select>
+            </div>
+            <div class="col-md-4 pt-md-4">
+                <button id="generateSummaryBtn" data-doc-id="{{ document.id }}" class="btn btn-info rounded-pill px-4 fw-bold text-dark w-100">
+                    <i class="bi bi-sparkles me-1"></i> Generate Summary
+                </button>
+            </div>
+        </div>
+
+        <div id="summaryOutput" class="mt-3">
+            <div class="p-3 bg-dark rounded border border-secondary text-light small">Select a summary mode above and click "Generate Summary" to synthesize structured AI insights.</div>
+        </div>
+    </div>
+
+    <!-- Extracted Chunks Inspector -->
+    <div class="glass-card p-4">
+        <h5 class="fw-bold mb-3 text-light"><i class="bi bi-list-nested text-info me-2"></i> Extracted Text Chunks & Vector Mapping</h5>
+        {% if chunks %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 90px;" class="text-info fw-bold">Chunk #</th>
+                        <th style="width: 90px;" class="text-info fw-bold">Page #</th>
+                        <th style="width: 110px;" class="text-info fw-bold">Vector ID</th>
+                        <th class="text-info fw-bold">Content Preview</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for chunk in chunks %}
+                    <tr>
+                        <td class="fw-bold text-light">#{{ chunk.chunk_index }}</td>
+                        <td><span class="badge bg-secondary text-light">Page {{ chunk.page_number }}</span></td>
+                        <td><span class="badge badge-score">ID {{ chunk.vector_id }}</span></td>
+                        <td class="small text-light" style="max-width: 500px; white-space: pre-wrap; font-family: monospace; line-height: 1.5;">{{ chunk.content|truncatechars:300 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-light small">No text chunks extracted.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Document Comparison — DocIntel Platform{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 gradient-text"><i class="bi bi-arrow-left-right text-info me-2"></i> Multi-Document AI Comparison</h2>
+            <p class="text-muted small mb-0">Select two ingested PDF documents for automated side-by-side financial, operational, and structural comparison.</p>
+        </div>
+    </div>
+
+    <!-- Document Selection Form Card -->
+    <div class="glass-card p-4 mb-4">
+        <form id="compareForm">
+            {% csrf_token %}
+            <div class="row g-3 align-items-center">
+                <div class="col-md-5">
+                    <label class="form-label small font-heading text-light"><i class="bi bi-file-earmark-pdf text-danger me-1"></i> Document A (Baseline)</label>
+                    <select id="docASelect" class="form-select bg-dark text-light border-secondary" required>
+                        <option value="">-- Select Document A --</option>
+                        {% for doc in documents %}
+                        <option value="{{ doc.id }}">📄 {{ doc.title }} ({{ doc.page_count }} Pages)</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 text-center pt-md-4">
+                    <span class="fs-4 text-info fw-bold"><i class="bi bi-arrow-left-right"></i> VS</span>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label small font-heading text-light"><i class="bi bi-file-earmark-pdf text-info me-1"></i> Document B (Comparison)</label>
+                    <select id="docBSelect" class="form-select bg-dark text-light border-secondary" required>
+                        <option value="">-- Select Document B --</option>
+                        {% for doc in documents %}
+                        <option value="{{ doc.id }}">📄 {{ doc.title }} ({{ doc.page_count }} Pages)</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="mt-4 text-end">
+                <button type="submit" id="compareSubmitBtn" class="btn btn-info rounded-pill px-5 fw-bold text-dark">
+                    <i class="bi bi-sparkles me-1"></i> Run AI Document Comparison
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Comparison Output Box -->
+    <div class="glass-card p-4">
+        <h4 class="fw-bold mb-3 gradient-text"><i class="bi bi-card-checklist text-info me-2"></i> Side-by-Side Comparison Report</h4>
+        <div id="comparisonResult" class="py-2">
+            <div class="text-center py-5 text-muted small">
+                <i class="bi bi-file-earmark-diff display-3 text-info mb-3 d-block"></i>
+                Select Document A and Document B above, then click <strong>"Run AI Document Comparison"</strong> to synthesize structured insights.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

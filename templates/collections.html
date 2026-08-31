@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Knowledge Base Collections — DocIntel Platform{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1 gradient-text"><i class="bi bi-folder text-primary me-2"></i> Multi-Document Knowledge Base Collections</h2>
+            <p class="text-muted small mb-0">Group related PDF documents into unified collections for multi-document RAG querying.</p>
+        </div>
+        <div>
+            <a href="{% url 'dashboard' %}" class="btn btn-info btn-sm rounded-pill text-dark fw-bold px-4">
+                <i class="bi bi-folder-plus me-1"></i> Create Collection
+            </a>
+        </div>
+    </div>
+
+    <!-- Collections Grid -->
+    <div class="row g-4">
+        {% for coll in collections %}
+        <div class="col-md-6 col-lg-4">
+            <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fs-4 text-primary"><i class="bi bi-folder-fill"></i></span>
+                        <span class="badge bg-primary bg-opacity-20 text-primary border border-primary px-3 py-1">{{ coll.documents.count }} Documents</span>
+                    </div>
+
+                    <h5 class="fw-bold text-light mb-2">{{ coll.name }}</h5>
+                    <p class="text-muted small mb-3">{% if coll.description %}{{ coll.description }}{% else %}Multi-document RAG collection.{% endif %}</p>
+
+                    <div class="border-top border-secondary pt-3 mt-2">
+                        <div class="small text-info fw-semibold mb-2">Contained Documents:</div>
+                        {% for d in coll.documents.all|slice:":3" %}
+                        <div class="text-light small mb-1 text-truncate">
+                            <i class="bi bi-file-pdf text-danger me-1"></i> {{ d.title }}
+                        </div>
+                        {% empty %}
+                        <div class="text-muted small">No documents added to this collection yet.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-2 border-top border-secondary text-end">
+                    <a href="{% url 'chat' %}?coll_id={{ coll.id }}" class="btn btn-outline-info btn-sm rounded-pill px-4">
+                        <i class="bi bi-chat-text-fill me-1"></i> Ask Collection
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="glass-card p-5 text-center my-4">
+                <i class="bi bi-folder2-open display-3 text-primary mb-3 d-block"></i>
+                <h5 class="fw-bold text-light">No collections created yet</h5>
+                <p class="text-muted small mb-3">Create collections on your Dashboard to group related documents together.</p>
+                <a href="{% url 'dashboard' %}" class="btn btn-info rounded-pill px-4 text-dark fw-bold">Go to Dashboard</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

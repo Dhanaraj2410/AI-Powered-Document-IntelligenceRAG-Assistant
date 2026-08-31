@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Document Chat — DocIntel Workspace{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 py-3">
+    <!-- Top Header Banner -->
+    <div class="d-flex justify-content-between align-items-center mb-3 px-2 flex-wrap gap-2">
+        <div>
+            <h4 class="fw-bold mb-0 text-light font-heading"><i class="bi bi-robot text-info me-2"></i> AI DOCUMENT CHAT</h4>
+            <p class="text-muted small mb-0">Ask questions, find information, and get grounded answers with page-level citations.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge text-light px-3 py-2 fw-bold shadow-sm" style="background-color: #059669 !important; border: 1px solid #34d399 !important; font-size: 0.85rem;">
+                <i class="status-dot status-dot-completed me-1"></i> FAISS + BM25 Hybrid Pipeline Ready
+            </span>
+        </div>
+    </div>
+
+    <!-- 3-Column Proportional Workspace Layout -->
+    <div class="row g-3">
+        <!-- 1. LEFT SIDEBAR (20% Width): Active Document & Chat Threads -->
+        <div class="col-lg-3 col-xl-3">
+            <!-- Active Document & Scope Card -->
+            <div class="glass-card p-3 mb-3">
+                <h6 class="fw-bold small text-info mb-2"><i class="bi bi-file-earmark-pdf text-danger me-1"></i> Active Document Context</h6>
+                <select id="chatDocSelect" class="form-select bg-dark text-light border-secondary mb-2">
+                    <option value="">-- All Ingested Documents --</option>
+                    {% for doc in documents %}
+                    <option value="{{ doc.id }}" {% if request.GET.doc_id == doc.id|stringformat:"i" %}selected{% endif %}>📄 {{ doc.title }}</option>
+                    {% endfor %}
+                </select>
+
+                <select id="chatCollSelect" class="form-select bg-dark text-light border-secondary">
+                    <option value="">-- All Collections --</option>
+                    {% for coll in collections %}
+                    <option value="{{ coll.id }}">📁 {{ coll.name }}</option>
+                    {% endfor %}
+                </select>
+
+                {% if active_conv and active_conv.document %}
+                <div class="mt-3 p-2 rounded bg-dark border border-secondary text-light small">
+                    <div class="fw-bold text-truncate"><i class="bi bi-file-pdf text-danger me-1"></i> {{ active_conv.document.title }}</div>
+                    <div class="text-success small mt-1"><i class="status-dot status-dot-completed"></i> Ready • {{ active_conv.document.page_count }} pages • {{ active_conv.document.chunk_count }} chunks</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Dynamic Suggested Questions Panel -->
+            <div class="glass-card p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold mb-0 small text-info"><i class="bi bi-lightbulb me-1"></i> Suggested Questions</h6>
+                    <span id="analysisSpinner" class="spinner-border spinner-border-sm text-info d-none"></span>
+                </div>
+                <div id="suggestedQuestionsList" class="d-flex flex-column gap-2">
+                    <button class="preset-btn text-start">💰 What was the company's total revenue?</button>
+                    <button class="preset-btn text-start">📈 What are the key operational findings?</button>
+                    <button class="preset-btn text-start">⚠️ What are the major business risks?</button>
+                    <button class="preset-btn text-start">📋 Summarize this document policy</button>
+                </div>
+            </div>
+
+            <!-- Recent Chat Threads History -->
+            <div class="glass-card p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold mb-0 small text-light"><i class="bi bi-clock-history me-1 text-info"></i> Recent Conversations</h6>
+                    <a href="{% url 'chat' %}" class="btn btn-outline-info btn-sm rounded-pill px-2 py-0" title="New Chat"><i class="bi bi-plus-lg"></i> New</a>
+                </div>
+                <div class="list-group list-group-flush bg-transparent overflow-auto" style="max-height: 280px;">
+                    {% for conv in conversations %}
+                    <a href="{% url 'chat' %}?conv_id={{ conv.id }}" class="list-group-item list-group-item-action bg-transparent text-light border-secondary px-2 py-2 small {% if active_conv and active_conv.id == conv.id %}active bg-info bg-opacity-20 border-info{% endif %}">
+                        <div class="fw-semibold text-truncate text-light"><i class="bi bi-chat-left-text me-1 text-info"></i> {{ conv.title }}</div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">{{ conv.updated_at|date:"M d, H:i" }}</div>
+                    </a>
+                    {% empty %}
+                    <div class="text-muted small py-3 text-center">No recent conversations.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. CENTER MAIN CHAT AREA (55% Width) -->
+        <div class="col-lg-6 col-xl-6">
+            <div class="glass-card chat-container d-flex flex-column">
+                <input type="hidden" id="currentConvId" value="{% if active_conv %}{{ active_conv.id }}{% endif %}">
+
+                <!-- Messages Output Window -->
+                <div class="chat-messages d-flex flex-column p-4 flex-grow-1 overflow-auto" id="chatMessages">
+                    {% if chat_messages %}
+                        {% for msg in chat_messages %}
+                            {% if msg.role == 'user' %}
+                            <div class="chat-bubble chat-bubble-user">{{ msg.content }}</div>
+                            {% else %}
+                            <div class="chat-bubble chat-bubble-assistant w-100">
+                                <div class="text-light mb-2">{{ msg.content|linebreaks }}</div>
+
+                                {% if msg.sources %}
+                                <hr class="my-2 border-secondary">
+                                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                                    <div class="fw-semibold text-info small"><i class="bi bi-journal-check me-1"></i> Grounded Sources ({{ msg.sources|length }} Citations):</div>
+                                    <button class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 inspect-source-btn" data-doc-title="{{ msg.sources.0.document_title }}" data-page="{{ msg.sources.0.page_number }}" data-score="{{ msg.sources.0.retrieval_score }}" data-reason="{{ msg.sources.0.reason }}" data-content="{{ msg.sources.0.chunk_preview }}">
+                                        <i class="bi bi-eye me-1"></i> View Source
+                                    </button>
+                                </div>
+                                {% for src in msg.sources %}
+                                <div class="citation-box mb-2">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="fw-semibold text-light small"><i class="bi bi-file-earmark-text text-danger me-1"></i> {{ src.document_title }} — Page {{ src.page_number }}</span>
+                                        <span class="badge badge-score">Relevance: {{ src.retrieval_score }}</span>
+                                    </div>
+                                    <div class="text-light small" style="font-style: italic;">"{{ src.chunk_preview }}"</div>
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+
+                                {% if msg.latency_metrics %}
+                                <div class="mt-2 text-end">
+                                    <span class="latency-pill"><i class="bi bi-clock-history me-1"></i> Total: {{ msg.latency_metrics.total_ms }}ms</span>
+                                    <span class="latency-pill">Retrieval: {{ msg.latency_metrics.retrieval_ms }}ms</span>
+                                    <span class="latency-pill">LLM: {{ msg.latency_metrics.llm_ms }}ms</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <!-- Empty State & Quick Suggestions Cards -->
+                        <div class="my-auto py-4 text-center">
+                            <div class="mb-3">
+                                <i class="bi bi-robot display-3 text-info"></i>
+                            </div>
+                            <h5 class="fw-bold text-light mb-2">What would you like to know?</h5>
+                            <p class="text-muted small mb-4">Select an uploaded PDF document and click any suggested topic below to begin.</p>
+
+                            <div class="row g-2 justify-content-center">
+                                <div class="col-md-6">
+                                    <button class="preset-btn text-start w-100 p-3 shadow-sm border-secondary">
+                                        <div class="fw-bold text-info"><i class="bi bi-currency-dollar me-1"></i> What is the revenue?</div>
+                                        <div class="text-muted small">Extract financial performance & numbers</div>
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button class="preset-btn text-start w-100 p-3 shadow-sm border-secondary">
+                                        <div class="fw-bold text-info"><i class="bi bi-graph-up me-1"></i> Key Findings & Scope</div>
+                                        <div class="text-muted small">Analyze core highlights & Executive summary</div>
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button class="preset-btn text-start w-100 p-3 shadow-sm border-secondary">
+                                        <div class="fw-bold text-info"><i class="bi bi-exclamation-triangle me-1"></i> Major Operational Risks</div>
+                                        <div class="text-muted small">Identify key business risks and challenges</div>
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button class="preset-btn text-start w-100 p-3 shadow-sm border-secondary">
+                                        <div class="fw-bold text-info"><i class="bi bi-file-text me-1"></i> Summarize Document</div>
+                                        <div class="text-muted small">Generate a structured executive report</div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Input Box -->
+                <div class="p-3 border-top border-secondary bg-dark rounded-bottom">
+                    <form id="chatForm" class="d-flex gap-2 align-items-center">
+                        <input type="text" id="chatInput" class="form-control bg-dark text-light border-secondary rounded-pill px-4 py-2" placeholder="Ask something about your document..." required autocomplete="off">
+                        <button type="submit" class="btn btn-info rounded-pill px-4 fw-bold text-dark d-flex align-items-center gap-1">
+                            <span>Ask</span> <i class="bi bi-send-fill"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. RIGHT SIDEBAR (25% Width): Source Inspector Panel -->
+        <div class="col-lg-3 col-xl-3">
+            <div class="glass-card p-3 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <h6 class="fw-bold text-info border-bottom border-secondary pb-2 mb-3">
+                        <i class="bi bi-journal-text me-1"></i> SOURCE INSPECTOR
+                    </h6>
+
+                    <div id="sourceInspectorContent">
+                        <div class="text-center py-5 text-muted small">
+                            <i class="bi bi-search display-4 text-info mb-3 d-block"></i>
+                            Click <strong>"View Source"</strong> on any AI response to inspect the exact retrieved passage, page number, and similarity score.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-3 pt-3 border-top border-secondary text-center small text-muted">
+                    <i class="bi bi-shield-check text-success me-1"></i> Grounded AI Citations
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

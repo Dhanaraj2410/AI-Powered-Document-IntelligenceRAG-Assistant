@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}System Usage & Analytics — DocMind Workspace{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-1 text-light font-heading"><i class="bi bi-graph-up-arrow text-info me-2"></i> Usage & Performance Analytics</h3>
+            <p class="text-light small mb-0">Simple summary of user queries, AI answer feedback, document index size, and response speed.</p>
+        </div>
+    </div>
+
+    <!-- Simple Usage Stat Cards -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Questions Asked -->
+        <div class="col-md-3">
+            <div class="glass-card p-4 text-center h-100 border-info">
+                <div class="text-info fw-bold small text-uppercase mb-1"><i class="bi bi-chat-left-dots-fill me-1"></i> Questions Asked</div>
+                <div class="display-5 fw-bold text-info my-2">{{ stats.total_queries }}</div>
+                <div class="small text-light">Total User Document Queries</div>
+            </div>
+        </div>
+
+        <!-- 2. Response Speed -->
+        <div class="col-md-3">
+            <div class="glass-card p-4 text-center h-100 border-warning">
+                <div class="text-warning fw-bold small text-uppercase mb-1"><i class="bi bi-lightning-fill me-1"></i> Response Speed</div>
+                <div class="display-5 fw-bold text-warning my-2">{{ stats.avg_latency }}s</div>
+                <div class="small text-light">Average RAG Response Latency</div>
+            </div>
+        </div>
+
+        <!-- 3. User Satisfaction -->
+        <div class="col-md-3">
+            <div class="glass-card p-4 text-center h-100 border-success">
+                <div class="text-success fw-bold small text-uppercase mb-1"><i class="bi bi-hand-thumbs-up-fill me-1"></i> User Satisfaction</div>
+                <div class="display-5 fw-bold text-success my-2">{{ stats.positive_feedback_pct }}%</div>
+                <div class="small text-light">Positive AI Answer Ratings</div>
+            </div>
+        </div>
+
+        <!-- 4. Knowledge Base Size -->
+        <div class="col-md-3">
+            <div class="glass-card p-4 text-center h-100 border-primary">
+                <div class="text-primary fw-bold small text-uppercase mb-1"><i class="bi bi-file-earmark-pdf-fill me-1"></i> Ingested Documents</div>
+                <div class="display-5 fw-bold text-primary my-2">{{ stats.total_documents }}</div>
+                <div class="small text-light">Uploaded Knowledge Base Files</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Documents Summary Table -->
+    <div class="glass-card p-4">
+        <h5 class="fw-bold mb-3 text-light"><i class="bi bi-pie-chart-fill text-info me-2"></i> Ingested Document Storage Overview</h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="text-info fw-bold">Document Title</th>
+                        <th class="text-info fw-bold">Page Count</th>
+                        <th class="text-info fw-bold">Vector Chunks</th>
+                        <th class="text-info fw-bold">Status</th>
+                        <th class="text-info fw-bold">Uploaded At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documents %}
+                    <tr>
+                        <td class="fw-bold text-light"><i class="bi bi-file-pdf text-danger me-2"></i> {{ doc.title }}</td>
+                        <td><span class="badge bg-secondary text-light px-3 py-1">{{ doc.page_count }} Pages</span></td>
+                        <td><span class="badge badge-score">{{ doc.chunk_count }} Chunks</span></td>
+                        <td><span class="badge badge-status-completed"><i class="status-dot status-dot-completed me-1"></i> Ready</span></td>
+                        <td class="small text-light">{{ doc.created_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-light small">No documents uploaded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
