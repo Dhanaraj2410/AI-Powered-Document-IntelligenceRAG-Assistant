@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "question": "What was the company's total revenue in 2025?",
+    "expected_keywords": ["revenue", "500 crore", "increased"],
+    "target_page": 24,
+    "target_doc": "Annual_Report_2025.pdf"
+  },
+  {
+    "id": 2,
+    "question": "Who is the Chief Executive Officer (CEO) of the company?",
+    "expected_keywords": ["CEO", "Chief Executive Officer"],
+    "target_page": 5,
+    "target_doc": "Annual_Report_2025.pdf"
+  },
+  {
+    "id": 3,
+    "question": "What are the major operational risks identified in the financial report?",
+    "expected_keywords": ["risk", "market volatility", "cybersecurity"],
+    "target_page": 42,
+    "target_doc": "Financial_Report.pdf"
+  },
+  {
+    "id": 4,
+    "question": "What is the policy regarding annual paid leave?",
+    "expected_keywords": ["leave", "paid time off", "annual"],
+    "target_page": 10,
+    "target_doc": "HR_Policy.pdf"
+  }
+]
