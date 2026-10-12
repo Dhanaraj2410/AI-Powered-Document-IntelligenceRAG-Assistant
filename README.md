@@ -144,6 +144,14 @@ python manage.py runserver
 
 Open browser at **[http://127.0.0.1:8000/](http://127.0.0.1:8000/)**.
 
+### 5. Run Tests
+
+```bash
+python -m pytest -q
+```
+
+The test suite uses `pytest-django` and automatically loads the project's Django settings.
+
 ---
 
 ## 🔌 API Endpoints
