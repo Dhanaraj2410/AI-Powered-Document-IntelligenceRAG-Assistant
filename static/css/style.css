@@ -53,6 +53,13 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .text-danger { color: #fca5a5 !important; }
 .text-info { color: #67e8f9 !important; }
 
+.hero-rag-badge {
+    background: rgba(8, 47, 73, 0.96) !important;
+    border: 1px solid #22d3ee !important;
+    color: #a5f3fc !important;
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.12), 0 8px 20px rgba(8, 47, 73, 0.28);
+}
+
 a:not(.btn) {
     color: #7dd3fc;
 }
