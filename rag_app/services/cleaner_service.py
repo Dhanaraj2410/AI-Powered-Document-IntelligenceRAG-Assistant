@@ -1,8 +1,10 @@
 import re
 
+
 class CleanerService:
+
     @staticmethod
-    def clean_text(text: str) -> str:
+    def clean_text(text: str | None) -> str:
         """
         Cleans and normalizes extracted PDF text by removing redundant whitespace,
         multiple newlines, and non-printable control characters.
