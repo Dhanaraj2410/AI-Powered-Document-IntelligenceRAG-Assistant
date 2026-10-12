@@ -12,8 +12,8 @@
     --accent-glow: rgba(99, 102, 241, 0.35);
 
     --text-heading: #ffffff;
-    --text-body: #ffffff;
-    --text-muted: #e2e8f0;
+    --text-body: #f8fafc;
+    --text-muted: #b8c5d6;
 
     --success: #10b981;
     --warning: #f59e0b;
@@ -37,16 +37,29 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     letter-spacing: -0.01em;
 }
 
-p, span, label, div {
-    color: var(--text-body);
-}
-
 .text-muted {
-    color: #e2e8f0 !important;
+    color: var(--text-muted) !important;
 }
 
 .text-light {
     color: #ffffff !important;
+}
+
+/* Accessible semantic colors for Bootstrap utilities on the dark surface. */
+.text-primary { color: #93c5fd !important; }
+.text-secondary { color: #cbd5e1 !important; }
+.text-success { color: #6ee7b7 !important; }
+.text-warning { color: #fcd34d !important; }
+.text-danger { color: #fca5a5 !important; }
+.text-info { color: #67e8f9 !important; }
+
+a:not(.btn) {
+    color: #7dd3fc;
+}
+
+a:not(.btn):hover,
+a:not(.btn):focus-visible {
+    color: #bae6fd;
 }
 
 /* Button Styling Fixes for High Visibility */
@@ -431,6 +444,18 @@ p, span, label, div {
     color: #ffffff !important;
 }
 
+.form-control:disabled,
+.form-select:disabled {
+    background-color: rgba(30, 41, 59, 0.9) !important;
+    color: #cbd5e1 !important;
+    opacity: 1;
+}
+
+.form-select option {
+    background: #0f172a;
+    color: #f8fafc;
+}
+
 .form-control::placeholder {
     color: #cbd5e1 !important;
 }
@@ -444,4 +469,9 @@ p, span, label, div {
 .form-label {
     color: #ffffff !important;
     font-weight: 600;
+}
+
+*:focus-visible {
+    outline: 2px solid #67e8f9;
+    outline-offset: 2px;
 }
