@@ -21,3 +21,8 @@ class APIEndpointsTestCase(TestCase):
     def test_collections_list_endpoint(self):
         response = self.client.get('/api/collections/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_documents_endpoint_requires_authentication(self):
+        self.client.logout()
+        response = self.client.get('/api/documents/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
