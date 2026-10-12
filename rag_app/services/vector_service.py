@@ -57,6 +57,9 @@ class VectorService:
         Returns:
             list[dict]: [{"vector_id": int, "retrieval_score": float}]
         """
+        if top_k <= 0:
+            return []
+
         if not os.path.exists(self.index_file):
             logger.warning("FAISS index file does not exist yet.")
             return []
