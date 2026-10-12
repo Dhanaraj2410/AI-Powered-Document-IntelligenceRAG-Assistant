@@ -10,6 +10,9 @@ class PDFServiceTestCase(TestCase):
         self.assertNotIn("\n\n\n", cleaned)
         self.assertIn("Revenue increased", cleaned)
 
+    def test_cleaner_service_handles_none(self):
+        self.assertEqual(CleanerService.clean_text(None), "")
+
     def test_nonexistent_pdf_handling(self):
         res = PDFService.extract_text_from_pdf("nonexistent_file.pdf")
         self.assertFalse(res["success"])
