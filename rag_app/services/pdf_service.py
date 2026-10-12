@@ -31,18 +31,16 @@ class PDFService:
         file_size = os.path.getsize(file_path)
 
         try:
-            doc = fitz.open(file_path)
-            pages_data = []
+            with fitz.open(file_path) as doc:
+                pages_data = []
 
-            for page_idx in range(len(doc)):
-                page = doc[page_idx]
-                page_text = page.get_text("text") or ""
-                pages_data.append({
-                    "page": page_idx + 1,
-                    "text": page_text
-                })
-
-            doc.close()
+                for page_idx in range(len(doc)):
+                    page = doc[page_idx]
+                    page_text = page.get_text("text") or ""
+                    pages_data.append({
+                        "page": page_idx + 1,
+                        "text": page_text
+                    })
 
             # Check if any readable text was extracted
             total_text_len = sum(len(p["text"].strip()) for p in pages_data)
