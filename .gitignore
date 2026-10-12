@@ -22,3 +22,5 @@ venv/
 .vscode/
 *.log
 *.sqlite3
+.pytest_cache/
+staticfiles/
