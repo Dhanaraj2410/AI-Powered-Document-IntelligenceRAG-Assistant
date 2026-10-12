@@ -6,6 +6,10 @@ class ChunkerService:
     def __init__(self, chunk_size: int = None, chunk_overlap: int = None):
         self.chunk_size = chunk_size or getattr(settings, 'CHUNK_SIZE', 1000)
         self.chunk_overlap = chunk_overlap or getattr(settings, 'CHUNK_OVERLAP', 150)
+        if self.chunk_size <= 0:
+            raise ValueError("chunk_size must be positive")
+        if self.chunk_overlap < 0 or self.chunk_overlap >= self.chunk_size:
+            raise ValueError("chunk_overlap must be between 0 and chunk_size - 1")
 
     def create_chunks_from_pages(self, pages: List[Dict[str, any]]) -> List[Dict[str, any]]:
         """
