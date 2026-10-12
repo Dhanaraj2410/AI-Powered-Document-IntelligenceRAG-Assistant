@@ -24,7 +24,7 @@ class BM25Service:
         Returns:
             List[dict]: [{"chunk": chunk_obj, "bm25_score": float}]
         """
-        if not chunks or not query.strip():
+        if not chunks or not query.strip() or top_k <= 0:
             return []
 
         corpus = [cls._tokenize(c["content"] if isinstance(c, dict) else c.content) for c in chunks]
