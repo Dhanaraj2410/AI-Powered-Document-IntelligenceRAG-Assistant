@@ -25,4 +25,4 @@ class APIEndpointsTestCase(TestCase):
     def test_documents_endpoint_requires_authentication(self):
         self.client.logout()
         response = self.client.get('/api/documents/')
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
