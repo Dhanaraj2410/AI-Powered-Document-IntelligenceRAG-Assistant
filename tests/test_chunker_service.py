@@ -23,3 +23,7 @@ class ChunkerServiceTestCase(TestCase):
         pages = [{"page": 1, "text": ""}]
         chunks = self.chunker.create_chunks_from_pages(pages)
         self.assertEqual(len(chunks), 0)
+
+    def test_chunker_rejects_invalid_overlap(self):
+        with self.assertRaises(ValueError):
+            ChunkerService(chunk_size=20, chunk_overlap=20)
