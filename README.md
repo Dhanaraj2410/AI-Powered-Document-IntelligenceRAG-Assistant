@@ -1,12 +1,12 @@
 # 🚀 AI-Powered Document Intelligence & Enterprise RAG Assistant
 
-A production-grade, portfolio-defining **Retrieval-Augmented Generation (RAG)** platform built with **Django**, **Django REST Framework (DRF)**, **PyMuPDF**, **Sentence Transformers**, **FAISS**, **BM25 Hybrid Search**, **Cross-Encoder Reranking**, and **Google Gemini 3.6 Flash API**.
+A portfolio project implementing **Retrieval-Augmented Generation (RAG)** with **Django**, **Django REST Framework (DRF)**, **PyMuPDF**, **Sentence Transformers**, **FAISS**, **BM25 Hybrid Search**, **Cross-Encoder Reranking**, and optional **Google Gemini** or **OpenAI** APIs.
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
 ![Django](https://img.shields.io/badge/Django-5.1-green.svg)
 ![RAG](https://img.shields.io/badge/GenAI-RAG%20Architecture-purple.svg)
 ![FAISS](https://img.shields.io/badge/VectorDB-FAISS-orange.svg)
-![Gemini](https://img.shields.io/badge/LLM-Google%20Gemini%203.6-blue.svg)
+![LLM](https://img.shields.io/badge/LLM-Gemini%20%7C%20OpenAI-blue.svg)
 ![Bootstrap](https://img.shields.io/badge/UI-Bootstrap%205-blueviolet.svg)
 
 ---
@@ -92,7 +92,7 @@ PostgreSQL / SQLite            PyMuPDF                      Sentence            
 ## 🛠️ Technology Stack
 
 - **Backend**: Python 3.11+, Django 5.1, Django REST Framework (DRF), SQLite / PostgreSQL
-- **AI / RAG / NLP**: PyMuPDF (`fitz`), `google-genai` SDK (`gemini-3.6-flash`), `sentence-transformers` (`all-MiniLM-L6-v2`), `faiss-cpu`, `rank-bm25`
+- **AI / RAG / NLP**: PyMuPDF (`fitz`), `google-genai` SDK (Gemini), OpenAI SDK (optional), `sentence-transformers` (`all-MiniLM-L6-v2`), `faiss-cpu`, `rank-bm25`
 - **Frontend**: HTML5, CSS3, JavaScript (Fetch API), Bootstrap 5, Bootstrap Icons
 - **Testing & Deployment**: Pytest, Django Test Client, Docker, Docker Compose
 
