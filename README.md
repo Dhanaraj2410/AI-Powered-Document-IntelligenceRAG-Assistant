@@ -127,7 +127,7 @@ Create `.env` file in root directory:
 SECRET_KEY=django-insecure-dev-secret-key
 DEBUG=True
 GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-3.6-flash
+GEMINI_MODEL=gemini-1.5-flash
 EMBEDDING_MODEL_NAME=all-MiniLM-L6-v2
 CHUNK_SIZE=1000
 CHUNK_OVERLAP=150
@@ -136,7 +136,6 @@ CHUNK_OVERLAP=150
 ### 4. Run Migrations & Start Server
 
 ```bash
-python manage.py makemigrations
 python manage.py migrate
 
 python manage.py runserver
