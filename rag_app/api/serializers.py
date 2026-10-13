@@ -69,8 +69,15 @@ class ConversationSerializer(serializers.ModelSerializer):
 
 
 class BookmarkSerializer(serializers.ModelSerializer):
-    message = serializers.PrimaryKeyRelatedField(queryset=Message.objects.all(), required=False, allow_null=True)
-    conversation = serializers.PrimaryKeyRelatedField(queryset=Conversation.objects.all(), required=False, allow_null=True)
+    message = serializers.PrimaryKeyRelatedField(queryset=Message.objects.none(), required=False, allow_null=True)
+    conversation = serializers.PrimaryKeyRelatedField(queryset=Conversation.objects.none(), required=False, allow_null=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            self.fields['message'].queryset = Message.objects.filter(conversation__user=request.user)
+            self.fields['conversation'].queryset = Conversation.objects.filter(user=request.user)
 
     class Meta:
         model = Bookmark
