@@ -27,6 +27,10 @@ def run_evaluation():
     with open(dataset_path, 'r', encoding='utf-8') as f:
         dataset = json.load(f)
 
+    if not dataset:
+        print("Evaluation dataset is empty; no metrics were calculated.")
+        return
+
     retriever = HybridRetrieverService()
     total_cases = len(dataset)
 
@@ -85,19 +89,11 @@ def run_evaluation():
         print(f"  [Q{case['id']}] '{question[:30]}...' -> Hit: {hit_found} | Rank: {rank_hit} | Time: {latency*1000:.1f}ms")
 
     # Compute Final Aggregate Metrics
-    p_at_k = round(precision_hits / total_cases if total_cases > 0 else 0.89, 4)
-    mrr = round(mrr_sum / total_cases if total_cases > 0 else 0.91, 4)
-    faithfulness = round(faithfulness_sum / total_cases if total_cases > 0 else 0.94, 4)
-    relevance = round(relevance_sum / total_cases if total_cases > 0 else 0.92, 4)
-    avg_latency = round(latency_sum / total_cases if total_cases > 0 else 1.78, 3)
-
-    # If database has no chunks yet, output baseline metrics for dashboard display
-    if total_cases > 0 and len(DocumentChunk.objects.all()) == 0:
-        p_at_k = 0.89
-        mrr = 0.91
-        faithfulness = 0.94
-        relevance = 0.92
-        avg_latency = 1.78
+    p_at_k = round(precision_hits / total_cases, 4)
+    mrr = round(mrr_sum / total_cases, 4)
+    faithfulness = round(faithfulness_sum / total_cases, 4)
+    relevance = round(relevance_sum / total_cases, 4)
+    avg_latency = round(latency_sum / total_cases, 3)
 
     eval_record = EvaluationResult.objects.create(
         precision_at_k=p_at_k,
