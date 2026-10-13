@@ -17,4 +17,3 @@ The application reads its settings from environment variables. See
 `.env.example` for the supported names and defaults. Docker
 Compose currently sets development values directly, so replace those values in
 any deployment-specific Compose configuration.
-
