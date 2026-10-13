@@ -185,13 +185,12 @@ class CompareAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        doc_a_id = request.data.get('doc_a_id')
-        doc_b_id = request.data.get('doc_b_id')
+        serializer = CompareRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        values = serializer.validated_data
 
-        if not doc_a_id or not doc_b_id:
-            return Response({"error": "Both doc_a_id and doc_b_id parameters are required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        result = ComparisonService.compare_documents(int(doc_a_id), int(doc_b_id), request.user.id)
+        result = ComparisonService.compare_documents(values['doc_a_id'], values['doc_b_id'], request.user.id)
         res_status = status.HTTP_200_OK if result["success"] else status.HTTP_400_BAD_REQUEST
 
         return Response(result, status=res_status)
