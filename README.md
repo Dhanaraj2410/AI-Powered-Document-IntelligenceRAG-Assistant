@@ -151,6 +151,8 @@ python -m pytest -q
 
 The test suite uses `pytest-django` and automatically loads the project's Django settings.
 
+For production configuration and storage considerations, see the [deployment notes](DEPLOYMENT.md).
+
 ---
 
 ## 🔌 API Endpoints
