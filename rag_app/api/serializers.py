@@ -112,6 +112,17 @@ class SummaryRequestSerializer(serializers.Serializer):
     mode = serializers.ChoiceField(choices=['executive', 'key_points', 'technical', 'risks'], default='executive')
 
 
+class SearchRequestSerializer(serializers.Serializer):
+    query = serializers.CharField(required=True, allow_blank=False, trim_whitespace=True)
+    document_id = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+    collection_id = serializers.IntegerField(required=False, allow_null=True, min_value=1)
+
+
+class CompareRequestSerializer(serializers.Serializer):
+    doc_a_id = serializers.IntegerField(required=True, min_value=1)
+    doc_b_id = serializers.IntegerField(required=True, min_value=1)
+
+
 class EvaluationResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = EvaluationResult

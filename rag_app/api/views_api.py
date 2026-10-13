@@ -11,7 +11,8 @@ from rag_app.services.search_service import SearchService
 from .serializers import (
     DocumentCollectionSerializer, DocumentSerializer, DocumentChunkSerializer,
     ConversationSerializer, MessageSerializer, BookmarkSerializer, FeedbackSerializer,
-    DocumentUploadSerializer, ChatQuerySerializer, SummaryRequestSerializer, EvaluationResultSerializer
+    DocumentUploadSerializer, ChatQuerySerializer, SummaryRequestSerializer,
+    SearchRequestSerializer, CompareRequestSerializer, EvaluationResultSerializer
 )
 
 class HealthCheckView(APIView):
@@ -138,18 +139,16 @@ class SearchAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        query = request.data.get('query', '').strip()
-        doc_id = request.data.get('document_id')
-        coll_id = request.data.get('collection_id')
-
-        if not query:
-            return Response({"error": "Query string is required."}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = SearchRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        values = serializer.validated_data
 
         result = SearchService.execute_search(
-            query=query,
+            query=values['query'],
             user_id=request.user.id,
-            document_id=int(doc_id) if doc_id else None,
-            collection_id=int(coll_id) if coll_id else None
+            document_id=values.get('document_id'),
+            collection_id=values.get('collection_id')
         )
 
         return Response(result, status=status.HTTP_200_OK)
