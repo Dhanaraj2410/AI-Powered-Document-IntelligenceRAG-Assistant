@@ -48,6 +48,19 @@ class MessageSerializer(serializers.ModelSerializer):
 class ConversationSerializer(serializers.ModelSerializer):
     messages = MessageSerializer(many=True, read_only=True)
     message_count = serializers.IntegerField(source='messages.count', read_only=True)
+    document = serializers.PrimaryKeyRelatedField(
+        queryset=Document.objects.none(), required=False, allow_null=True
+    )
+    collection = serializers.PrimaryKeyRelatedField(
+        queryset=DocumentCollection.objects.none(), required=False, allow_null=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            self.fields['document'].queryset = Document.objects.filter(user=request.user)
+            self.fields['collection'].queryset = DocumentCollection.objects.filter(user=request.user)
 
     class Meta:
         model = Conversation
