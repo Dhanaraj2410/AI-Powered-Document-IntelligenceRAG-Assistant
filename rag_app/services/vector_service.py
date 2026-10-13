@@ -37,6 +37,11 @@ class VectorService:
         if embeddings is None or len(embeddings) == 0:
             return []
 
+        if embeddings.ndim != 2 or embeddings.shape[1] != self.dimension:
+            raise ValueError(
+                f"Expected embeddings with shape (N, {self.dimension}); got {embeddings.shape}."
+            )
+
         embeddings = embeddings.astype(np.float32)
         index = self._get_or_create_index()
         current_count = index.ntotal
@@ -70,6 +75,11 @@ class VectorService:
 
         if query_vector.ndim == 1:
             query_vector = np.expand_dims(query_vector, axis=0)
+
+        if query_vector.ndim != 2 or query_vector.shape != (1, self.dimension):
+            raise ValueError(
+                f"Expected one query vector with shape (1, {self.dimension}); got {query_vector.shape}."
+            )
 
         query_vector = query_vector.astype(np.float32)
         k_to_search = min(top_k, index.ntotal)
