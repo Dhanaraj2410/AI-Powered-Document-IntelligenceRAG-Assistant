@@ -18,6 +18,15 @@ class DocumentChunkSerializer(serializers.ModelSerializer):
 
 class DocumentSerializer(serializers.ModelSerializer):
     collection_name = serializers.CharField(source='collection.name', read_only=True, default='')
+    collection = serializers.PrimaryKeyRelatedField(
+        queryset=DocumentCollection.objects.none(), required=False, allow_null=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            self.fields['collection'].queryset = DocumentCollection.objects.filter(user=request.user)
 
     class Meta:
         model = Document
