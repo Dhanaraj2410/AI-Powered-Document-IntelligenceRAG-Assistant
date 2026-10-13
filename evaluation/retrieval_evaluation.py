@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 django.setup()
 
-from rag_app.models import EvaluationResult, DocumentChunk, Document
+from rag_app.models import EvaluationResult
 from rag_app.services.hybrid_retriever_service import HybridRetrieverService
 from rag_app.services.reranker_service import RerankerService
 from rag_app.services.grounding_service import GroundingService
@@ -78,7 +78,6 @@ def run_evaluation():
             mrr_sum += (1.0 / rank_hit)
 
         # Grounding / Faithfulness check on top chunk
-        top_text = " ".join([r["content"] for r in reranked])
         g_res = GroundingService.verify_grounding(question, reranked)
         faithfulness_sum += g_res["faithfulness_score"]
 
