@@ -176,7 +176,10 @@ Run the offline evaluation benchmark:
 python evaluation/retrieval_evaluation.py
 ```
 
-Output:
+The script prints metrics calculated from the benchmark dataset and the documents
+indexed for the first user in the local database. Results depend on that data and
+will differ between runs and environments; the values below are an example format,
+not a guaranteed benchmark result.
 
 ```text
 ============================================================
