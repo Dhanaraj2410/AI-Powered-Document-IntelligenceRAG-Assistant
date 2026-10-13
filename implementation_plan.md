@@ -1,6 +1,6 @@
 # Enterprise Implementation Plan: AI-Powered Document Intelligence & Enterprise RAG Assistant (V2)
 
-Build an enterprise-grade, portfolio-defining **AI Document Intelligence & Enterprise RAG Platform** using **Django**, **Django REST Framework (DRF)**, **PyMuPDF**, **Sentence Transformers**, **FAISS + BM25 Hybrid Search**, **Cross-Encoder Reranking**, **OpenAI API**, and **Bootstrap 5 UI** with multi-tenant authentication, multi-document collections, anti-hallucination verification, latency breakdown monitoring, and an interactive RAG Evaluation Dashboard.
+Build an **AI Document Intelligence & RAG Platform** using **Django**, **Django REST Framework (DRF)**, **PyMuPDF**, **Sentence Transformers**, **FAISS + BM25 Hybrid Search**, **Cross-Encoder Reranking**, optional **Google Gemini or OpenAI APIs**, and a **Bootstrap 5 UI** with user-scoped documents, multi-document collections, grounding checks, latency tracking, and an interactive RAG Evaluation Dashboard.
 
 ## User Review Required
 
@@ -9,7 +9,7 @@ Build an enterprise-grade, portfolio-defining **AI Document Intelligence & Enter
 > - **Hybrid Search & Reranking**: Combines **FAISS** (semantic vector search) + **BM25** (exact keyword search) with reciprocal rank fusion, followed by a **Reranker** stage for high-precision context assembly.
 > - **Anti-Hallucination Layer**: Prompt constraints + post-generation grounding check to eliminate ungrounded answers.
 > - **Latency & Evaluation Suite**: Records stage-by-stage response time (Retrieval ms, Reranking ms, LLM ms) and exposes an in-app **RAG Evaluation Dashboard** displaying Precision@K, Faithfulness, and Answer Relevance.
-> - **Environment & Docker Compose**: Configured via `.env` (`OPENAI_MODEL`, `OPENAI_API_KEY`, `EMBEDDING_MODEL_NAME`) and deployed with `docker-compose.yml`.
+> - **Environment & Docker Compose**: Configured via `.env` (`GEMINI_MODEL`, `GEMINI_API_KEY`, optional `OPENAI_MODEL` / `OPENAI_API_KEY`, and `EMBEDDING_MODEL_NAME`) and run with `docker-compose.yml`.
 
 ---
 
