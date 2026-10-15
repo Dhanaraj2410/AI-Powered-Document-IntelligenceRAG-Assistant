@@ -13,6 +13,7 @@ class APIEndpointsTestCase(TestCase):
         response = self.client.get('/api/health/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'healthy')
+        self.assertEqual(response.data['version'], '2.0.0')
 
     def test_documents_list_endpoint(self):
         response = self.client.get('/api/documents/')
