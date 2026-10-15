@@ -154,6 +154,15 @@ The test suite uses `pytest-django` and automatically loads the project's Django
 For production configuration and storage considerations, see the [deployment notes](DEPLOYMENT.md).
 For a concise component and request-flow overview, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
+### Troubleshooting startup
+
+- If model loading fails, verify that the embedding dependencies are installed
+  and that the configured model can be downloaded in the current environment.
+- If requests are rejected by Django, add the browser host to `ALLOWED_HOSTS`.
+- If retrieval returns no context, rebuild the local vector artifacts from the
+  uploaded documents and confirm that the index dimension matches the embedding
+  model.
+
 ---
 
 ## 🔌 API Endpoints
