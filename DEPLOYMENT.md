@@ -13,6 +13,11 @@ local development. Before deploying to a public environment:
 7. Use a production WSGI/ASGI server and configure persistent storage and backups
    for uploaded files and the FAISS index.
 
+Back up the database, uploaded documents, FAISS index, and BM25 metadata as one
+versioned snapshot. Restore them together because the index metadata and
+database document records must describe the same corpus. Test restoration in a
+separate environment before treating a backup as usable.
+
 The application reads its settings from environment variables. See
 `.env.example` for the supported names and defaults. Docker
 Compose currently sets development values directly, so replace those values in
