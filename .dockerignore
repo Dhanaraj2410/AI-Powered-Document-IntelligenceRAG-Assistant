@@ -1,0 +1,14 @@
+.git
+.github
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.env
+db.sqlite3
+media
+staticfiles
+data/uploads
+data/faiss_index
+data/bm25_index.pkl
