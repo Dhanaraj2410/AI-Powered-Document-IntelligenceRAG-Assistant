@@ -89,8 +89,6 @@
                 <input id="chunkSearch" type="search" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Search chunk text…" aria-label="Search extracted chunks" style="min-width: 220px;">
                 <select id="chunkPageFilter" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Filter chunks by page" style="min-width: 150px;">
                     <option value="">All pages</option>
-                    {% regroup chunks by page_number as page_groups %}
-                    {% for group in page_groups %}<option value="{{ group.grouper }}">Page {{ group.grouper }}</option>{% endfor %}
                 </select>
                 <button id="clearChunkFilters" type="button" class="btn btn-outline-light btn-sm">Clear</button>
                 <select id="chunkExportFormat" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Export format">
@@ -140,6 +138,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const clear = document.getElementById('clearChunkFilters');
     const status = document.getElementById('chunkSearchStatus');
     const rows = Array.from(document.querySelectorAll('.chunk-row'));
+    Array.from(new Set(rows.map(function (row) { return Number(row.dataset.page); })))
+        .sort(function (a, b) { return a - b; })
+        .forEach(function (page) {
+            const option = document.createElement('option');
+            option.value = page;
+            option.textContent = 'Page ' + page;
+            pageFilter.appendChild(option);
+        });
     document.getElementById('exportChunks').addEventListener('click', function () {
         try {
         const format = document.getElementById('chunkExportFormat').value;
