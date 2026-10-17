@@ -78,6 +78,7 @@ PostgreSQL / SQLite            PyMuPDF                      Sentence            
 
 - 🏠 **Dashboard (`/dashboard/`)**: Stat cards, drag-and-drop PDF uploader, processing indicators, and collection creator.
 - 📄 **Document Library (`/documents/`)**: Document list with status filters (`Completed`, `Processing`, `Failed`).
+- 🔎 **Document Chunk Inspector**: Search extracted text, filter by page, copy full chunk content, and export matching chunks as JSON, CSV, or plain text.
 - 📚 **Collections (`/collections/`)**: Group related PDF documents into unified knowledge bases for multi-document RAG.
 - 💬 **RAG Workspace Chat (`/chat/`)**: Proportional 3-column AI workspace with step-by-step thinking indicators, suggested question cards, and **Right-Side Source Inspector Drawer**.
 - 🔎 **Search Inspector (`/search/`)**: Standalone Hybrid Search Inspector for live FAISS + BM25 vector candidate ranking analysis.
