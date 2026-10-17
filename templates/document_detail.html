@@ -79,7 +79,24 @@
 
     <!-- Extracted Chunks Inspector -->
     <div class="glass-card p-4">
-        <h5 class="fw-bold mb-3 text-light"><i class="bi bi-list-nested text-info me-2"></i> Extracted Text Chunks & Vector Mapping</h5>
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+            <div>
+                <h5 class="fw-bold mb-1 text-light"><i class="bi bi-list-nested text-info me-2"></i> Extracted Text Chunks & Vector Mapping</h5>
+                <p class="text-light small mb-0">Search the extracted text or narrow the list to a page.</p>
+            </div>
+            {% if chunks %}
+            <div class="d-flex flex-wrap gap-2">
+                <input id="chunkSearch" type="search" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Search chunk text…" aria-label="Search extracted chunks" style="min-width: 220px;">
+                <select id="chunkPageFilter" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Filter chunks by page" style="min-width: 150px;">
+                    <option value="">All pages</option>
+                    {% regroup chunks by page_number as page_groups %}
+                    {% for group in page_groups %}<option value="{{ group.grouper }}">Page {{ group.grouper }}</option>{% endfor %}
+                </select>
+                <button id="clearChunkFilters" type="button" class="btn btn-outline-light btn-sm">Clear</button>
+            </div>
+            {% endif %}
+        </div>
+        {% if chunks %}<div id="chunkSearchStatus" class="text-secondary small mb-2" aria-live="polite"></div>{% endif %}
         {% if chunks %}
         <div class="table-responsive">
             <table class="table table-dark table-hover align-middle mb-0">
@@ -93,7 +110,7 @@
                 </thead>
                 <tbody>
                     {% for chunk in chunks %}
-                    <tr>
+                    <tr class="chunk-row" data-page="{{ chunk.page_number }}">
                         <td class="fw-bold text-light">#{{ chunk.chunk_index }}</td>
                         <td><span class="badge bg-secondary text-light">Page {{ chunk.page_number }}</span></td>
                         <td><span class="badge badge-score">ID {{ chunk.vector_id }}</span></td>
@@ -108,4 +125,36 @@
         {% endif %}
     </div>
 </div>
+{% if chunks %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const search = document.getElementById('chunkSearch');
+    const pageFilter = document.getElementById('chunkPageFilter');
+    const clear = document.getElementById('clearChunkFilters');
+    const status = document.getElementById('chunkSearchStatus');
+    const rows = Array.from(document.querySelectorAll('.chunk-row'));
+    function applyFilters() {
+        const query = search.value.trim().toLocaleLowerCase();
+        const page = pageFilter.value;
+        let visible = 0;
+        rows.forEach(function (row) {
+            const matches = (!query || row.cells[3].textContent.toLocaleLowerCase().includes(query))
+                && (!page || row.dataset.page === page);
+            row.hidden = !matches;
+            if (matches) visible += 1;
+        });
+        status.textContent = 'Showing ' + visible + ' of ' + rows.length + ' chunks';
+    }
+    search.addEventListener('input', applyFilters);
+    pageFilter.addEventListener('change', applyFilters);
+    clear.addEventListener('click', function () {
+        search.value = '';
+        pageFilter.value = '';
+        applyFilters();
+        search.focus();
+    });
+    applyFilters();
+});
+</script>
+{% endif %}
 {% endblock %}
