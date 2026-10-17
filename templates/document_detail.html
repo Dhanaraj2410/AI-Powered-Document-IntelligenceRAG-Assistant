@@ -116,7 +116,7 @@
                 </thead>
                 <tbody>
                     {% for chunk in chunks %}
-                    <tr class="chunk-row" data-page="{{ chunk.page_number }}">
+                    <tr class="chunk-row" data-page="{{ chunk.page_number }}" data-chunk-index="{{ chunk.chunk_index }}" data-vector-id="{{ chunk.vector_id }}">
                         <td class="fw-bold text-light">#{{ chunk.chunk_index }}</td>
                         <td><span class="badge bg-secondary text-light">Page {{ chunk.page_number }}</span></td>
                         <td><span class="badge badge-score">ID {{ chunk.vector_id }}</span></td>
@@ -144,9 +144,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const format = document.getElementById('chunkExportFormat').value;
         const chunks = rows.filter(function (row) { return !row.hidden; }).map(function (row) {
             return {
-                chunk: row.cells[0].textContent.trim().replace(/^#/, ''),
+                chunk: Number(row.dataset.chunkIndex),
                 page: Number(row.dataset.page),
-                vector_id: row.cells[2].textContent.trim().replace(/^ID\s*/, ''),
+                vector_id: Number(row.dataset.vectorId),
                 content: row.querySelector('[data-copy-chunk]').dataset.copyChunk
             };
         });
