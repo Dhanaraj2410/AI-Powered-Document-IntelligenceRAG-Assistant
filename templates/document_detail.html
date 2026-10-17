@@ -165,6 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
         link.download = safeTitle + '-chunks.' + (format === 'json' ? 'json' : 'txt');
         link.click();
         window.setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
+        status.textContent = 'Exported ' + chunks.length + (chunks.length === 1 ? ' chunk.' : ' chunks.') + ' as ' + format.toUpperCase() + '.';
     });
     document.querySelectorAll('[data-copy-chunk]').forEach(function (button) {
         button.addEventListener('click', async function () {
