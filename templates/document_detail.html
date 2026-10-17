@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function () {
         link.href = URL.createObjectURL(blob);
         link.download = safeTitle + '-chunks.' + (format === 'json' ? 'json' : 'txt');
         link.click();
-        URL.revokeObjectURL(link.href);
+        window.setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
     });
     document.querySelectorAll('[data-copy-chunk]').forEach(function (button) {
         button.addEventListener('click', async function () {
