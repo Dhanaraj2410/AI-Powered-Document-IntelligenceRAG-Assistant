@@ -180,6 +180,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-copy-chunk]').forEach(function (button) {
         button.addEventListener('click', async function () {
             try {
+                if (!navigator.clipboard || !navigator.clipboard.writeText) {
+                    throw new Error('Clipboard API unavailable');
+                }
                 await navigator.clipboard.writeText(button.dataset.copyChunk);
                 button.textContent = 'Copied';
                 window.setTimeout(function () {
