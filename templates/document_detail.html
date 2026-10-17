@@ -181,9 +181,9 @@ document.addEventListener('DOMContentLoaded', function () {
         button.addEventListener('click', async function () {
             try {
                 await navigator.clipboard.writeText(button.dataset.copyChunk);
-                button.innerHTML = '<i class="bi bi-check2 me-1"></i>Copied';
+                button.textContent = 'Copied';
                 window.setTimeout(function () {
-                    button.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy';
+                    button.textContent = 'Copy';
                 }, 1500);
             } catch (error) {
                 status.textContent = 'Clipboard access is unavailable. Select and copy the chunk text manually.';
