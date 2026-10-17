@@ -94,6 +94,7 @@
                 <select id="chunkExportFormat" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Export format">
                     <option value="json">JSON</option>
                     <option value="txt">Plain text</option>
+                    <option value="csv">CSV</option>
                 </select>
                 <button id="exportChunks" type="button" class="btn btn-info btn-sm text-dark fw-bold"><i class="bi bi-download me-1"></i>Export</button>
             </div>
@@ -164,14 +165,20 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         const documentTitle = document.getElementById('chunkInspector').dataset.documentTitle;
+        const escapeCsv = function (value) { return '"' + String(value).replace(/"/g, '""') + '"'; };
         const body = format === 'json'
             ? JSON.stringify({ document: documentTitle, chunks: chunks }, null, 2)
-            : chunks.map(function (chunk) { return 'Chunk ' + chunk.chunk + ' — Page ' + chunk.page + '\n' + chunk.content; }).join('\n\n');
-        const blob = new Blob([body], { type: format === 'json' ? 'application/json' : 'text/plain' });
+            : format === 'csv'
+                ? ['chunk,page,vector_id,content'].concat(chunks.map(function (chunk) {
+                    return [chunk.chunk, chunk.page, chunk.vector_id, chunk.content].map(escapeCsv).join(',');
+                })).join('\r\n')
+                : chunks.map(function (chunk) { return 'Chunk ' + chunk.chunk + ' — Page ' + chunk.page + '\n' + chunk.content; }).join('\n\n');
+        const mimeType = format === 'json' ? 'application/json' : format === 'csv' ? 'text/csv' : 'text/plain';
+        const blob = new Blob([body], { type: mimeType });
         const safeTitle = documentTitle.toLocaleLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'document';
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = safeTitle + '-chunks.' + (format === 'json' ? 'json' : 'txt');
+        link.download = safeTitle + '-chunks.' + format;
         link.click();
         window.setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
         status.textContent = 'Exported ' + chunks.length + (chunks.length === 1 ? ' chunk.' : ' chunks.') + ' as ' + format.toUpperCase() + '.';
