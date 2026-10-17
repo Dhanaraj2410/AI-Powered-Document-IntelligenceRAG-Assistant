@@ -150,6 +150,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 content: row.querySelector('[data-copy-chunk]').dataset.copyChunk
             };
         });
+        if (!chunks.length) {
+            status.textContent = 'No matching chunks to export. Adjust the search or page filter and try again.';
+            return;
+        }
         const documentTitle = document.getElementById('chunkInspector').dataset.documentTitle;
         const body = format === 'json'
             ? JSON.stringify({ document: documentTitle, chunks: chunks }, null, 2)
