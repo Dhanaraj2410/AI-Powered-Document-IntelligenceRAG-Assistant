@@ -101,7 +101,7 @@
             </div>
             {% endif %}
         </div>
-        {% if chunks %}<div id="chunkSearchStatus" class="text-secondary small mb-2" aria-live="polite"></div>{% endif %}
+        {% if chunks %}<div id="chunkSearchStatus" class="text-secondary small mb-2" role="status" aria-live="polite" aria-atomic="true"></div>{% endif %}
         {% if chunks %}
         <div class="table-responsive">
             <table class="table table-dark table-hover align-middle mb-0">
