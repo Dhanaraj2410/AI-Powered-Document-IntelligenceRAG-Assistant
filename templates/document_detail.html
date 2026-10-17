@@ -174,7 +174,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 })).join('\r\n')
                 : chunks.map(function (chunk) { return 'Chunk ' + chunk.chunk + ' — Page ' + chunk.page + '\n' + chunk.content; }).join('\n\n');
         const mimeType = format === 'json' ? 'application/json' : format === 'csv' ? 'text/csv' : 'text/plain';
-        const blob = new Blob([body], { type: mimeType });
+        const exportBody = format === 'csv' ? '\uFEFF' + body : body;
+        const blob = new Blob([exportBody], { type: mimeType });
         const safeTitle = documentTitle.toLocaleLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'document';
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
