@@ -78,7 +78,7 @@
     </div>
 
     <!-- Extracted Chunks Inspector -->
-    <div class="glass-card p-4">
+    <div class="glass-card p-4" id="chunkInspector" data-document-title="{{ document.title }}">
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
             <div>
                 <h5 class="fw-bold mb-1 text-light"><i class="bi bi-list-nested text-info me-2"></i> Extracted Text Chunks & Vector Mapping</h5>
@@ -93,6 +93,7 @@
                     {% for group in page_groups %}<option value="{{ group.grouper }}">Page {{ group.grouper }}</option>{% endfor %}
                 </select>
                 <button id="clearChunkFilters" type="button" class="btn btn-outline-light btn-sm">Clear</button>
+                <button id="exportChunks" type="button" class="btn btn-info btn-sm text-dark fw-bold"><i class="bi bi-download me-1"></i>Export JSON</button>
             </div>
             {% endif %}
         </div>
@@ -135,6 +136,22 @@ document.addEventListener('DOMContentLoaded', function () {
     const clear = document.getElementById('clearChunkFilters');
     const status = document.getElementById('chunkSearchStatus');
     const rows = Array.from(document.querySelectorAll('.chunk-row'));
+    document.getElementById('exportChunks').addEventListener('click', function () {
+        const chunks = rows.filter(function (row) { return !row.hidden; }).map(function (row) {
+            return {
+                chunk: row.cells[0].textContent.trim().replace(/^#/, ''),
+                page: Number(row.dataset.page),
+                vector_id: row.cells[2].textContent.trim().replace(/^ID\s*/, ''),
+                content: row.querySelector('[data-copy-chunk]').dataset.copyChunk
+            };
+        });
+        const blob = new Blob([JSON.stringify({ document: document.getElementById('chunkInspector').dataset.documentTitle, chunks: chunks }, null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'document-chunks.json';
+        link.click();
+        URL.revokeObjectURL(link.href);
+    });
     document.querySelectorAll('[data-copy-chunk]').forEach(function (button) {
         button.addEventListener('click', async function () {
             try {
