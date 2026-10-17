@@ -122,6 +122,7 @@
                         <td><button type="button" class="btn btn-outline-info btn-sm" data-copy-chunk="{{ chunk.content }}" aria-label="Copy chunk {{ chunk.chunk_index }} text"><i class="bi bi-clipboard me-1"></i>Copy</button></td>
                     </tr>
                     {% endfor %}
+                    <tr id="chunkNoResults" hidden><td colspan="5" class="text-center text-light py-4">No chunks match these filters.</td></tr>
                 </tbody>
             </table>
         </div>
@@ -138,6 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const clear = document.getElementById('clearChunkFilters');
     const status = document.getElementById('chunkSearchStatus');
     const rows = Array.from(document.querySelectorAll('.chunk-row'));
+    const noResults = document.getElementById('chunkNoResults');
     Array.from(new Set(rows.map(function (row) { return Number(row.dataset.page); })))
         .sort(function (a, b) { return a - b; })
         .forEach(function (page) {
@@ -203,6 +205,7 @@ document.addEventListener('DOMContentLoaded', function () {
             row.hidden = !matches;
             if (matches) visible += 1;
         });
+        noResults.hidden = visible !== 0;
         status.textContent = 'Showing ' + visible + ' of ' + rows.length + ' chunks';
     }
     search.addEventListener('input', applyFilters);
