@@ -155,9 +155,10 @@ document.addEventListener('DOMContentLoaded', function () {
             ? JSON.stringify({ document: documentTitle, chunks: chunks }, null, 2)
             : chunks.map(function (chunk) { return 'Chunk ' + chunk.chunk + ' — Page ' + chunk.page + '\n' + chunk.content; }).join('\n\n');
         const blob = new Blob([body], { type: format === 'json' ? 'application/json' : 'text/plain' });
+        const safeTitle = documentTitle.toLocaleLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'document';
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = 'document-chunks.' + (format === 'json' ? 'json' : 'txt');
+        link.download = safeTitle + '-chunks.' + (format === 'json' ? 'json' : 'txt');
         link.click();
         URL.revokeObjectURL(link.href);
     });
