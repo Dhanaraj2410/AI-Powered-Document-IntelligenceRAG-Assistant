@@ -141,6 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const status = document.getElementById('chunkSearchStatus');
     const rows = Array.from(document.querySelectorAll('.chunk-row'));
     document.getElementById('exportChunks').addEventListener('click', function () {
+        try {
         const format = document.getElementById('chunkExportFormat').value;
         const chunks = rows.filter(function (row) { return !row.hidden; }).map(function (row) {
             return {
@@ -166,6 +167,9 @@ document.addEventListener('DOMContentLoaded', function () {
         link.click();
         window.setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
         status.textContent = 'Exported ' + chunks.length + (chunks.length === 1 ? ' chunk.' : ' chunks.') + ' as ' + format.toUpperCase() + '.';
+        } catch (error) {
+            status.textContent = 'The chunk export could not be created. Please try again.';
+        }
     });
     document.querySelectorAll('[data-copy-chunk]').forEach(function (button) {
         button.addEventListener('click', async function () {
