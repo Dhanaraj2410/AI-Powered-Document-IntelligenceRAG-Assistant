@@ -93,7 +93,11 @@
                     {% for group in page_groups %}<option value="{{ group.grouper }}">Page {{ group.grouper }}</option>{% endfor %}
                 </select>
                 <button id="clearChunkFilters" type="button" class="btn btn-outline-light btn-sm">Clear</button>
-                <button id="exportChunks" type="button" class="btn btn-info btn-sm text-dark fw-bold"><i class="bi bi-download me-1"></i>Export JSON</button>
+                <select id="chunkExportFormat" class="form-select form-select-sm bg-dark text-light border-secondary" aria-label="Export format">
+                    <option value="json">JSON</option>
+                    <option value="txt">Plain text</option>
+                </select>
+                <button id="exportChunks" type="button" class="btn btn-info btn-sm text-dark fw-bold"><i class="bi bi-download me-1"></i>Export</button>
             </div>
             {% endif %}
         </div>
@@ -137,6 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const status = document.getElementById('chunkSearchStatus');
     const rows = Array.from(document.querySelectorAll('.chunk-row'));
     document.getElementById('exportChunks').addEventListener('click', function () {
+        const format = document.getElementById('chunkExportFormat').value;
         const chunks = rows.filter(function (row) { return !row.hidden; }).map(function (row) {
             return {
                 chunk: row.cells[0].textContent.trim().replace(/^#/, ''),
@@ -145,10 +150,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 content: row.querySelector('[data-copy-chunk]').dataset.copyChunk
             };
         });
-        const blob = new Blob([JSON.stringify({ document: document.getElementById('chunkInspector').dataset.documentTitle, chunks: chunks }, null, 2)], { type: 'application/json' });
+        const documentTitle = document.getElementById('chunkInspector').dataset.documentTitle;
+        const body = format === 'json'
+            ? JSON.stringify({ document: documentTitle, chunks: chunks }, null, 2)
+            : chunks.map(function (chunk) { return 'Chunk ' + chunk.chunk + ' — Page ' + chunk.page + '\n' + chunk.content; }).join('\n\n');
+        const blob = new Blob([body], { type: format === 'json' ? 'application/json' : 'text/plain' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = 'document-chunks.json';
+        link.download = 'document-chunks.' + (format === 'json' ? 'json' : 'txt');
         link.click();
         URL.revokeObjectURL(link.href);
     });
