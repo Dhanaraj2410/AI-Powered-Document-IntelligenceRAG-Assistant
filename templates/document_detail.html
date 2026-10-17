@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const documentTitle = document.getElementById('chunkInspector').dataset.documentTitle;
         const escapeCsv = function (value) { return '"' + String(value).replace(/"/g, '""') + '"'; };
         const body = format === 'json'
-            ? JSON.stringify({ document: documentTitle, chunks: chunks }, null, 2)
+            ? JSON.stringify({ schema_version: 1, document: documentTitle, chunks: chunks }, null, 2)
             : format === 'csv'
                 ? ['chunk,page,vector_id,content'].concat(chunks.map(function (chunk) {
                     return [chunk.chunk, chunk.page, chunk.vector_id, chunk.content].map(escapeCsv).join(',');
