@@ -155,6 +155,31 @@ The test suite uses `pytest-django` and automatically loads the project's Django
 For production configuration and storage considerations, see the [deployment notes](DEPLOYMENT.md).
 For a concise component and request-flow overview, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
+## Current processing and deployment notes
+
+Uploads accept PDF, DOCX, PPTX, XLSX, CSV, TXT, and Markdown. The API validates
+extensions, configured size, accepted content type, and signatures for PDF and
+Office Open XML files. Uploaded files are stored under `data/uploads` and are
+not served as public media. Scanned PDF OCR is optional and requires the
+Tesseract executable plus the pinned `pytesseract` and Pillow packages.
+
+Ingestion currently runs in a background thread in the web process. The
+document API exposes `uploaded`, `processing`, `completed`, or `failed` status;
+poll `/api/documents/<id>/` for progress. A process restart can interrupt a job,
+so production deployments should replace this lightweight worker with a
+durable task queue. FAISS remains the default vector backend. Set
+`VECTOR_SERVICE_CLASS` and `EMBEDDING_SERVICE_CLASS` to Python import paths to
+provide compatible adapters. `CHUNK_SIZE`, `CHUNK_OVERLAP`, `TOP_K_RETRIEVAL`,
+`RERANK_TOP_K`, `RETRIEVAL_SCORE_THRESHOLD`, and `MAX_UPLOAD_SIZE` tune the
+pipeline.
+
+Set a random `SECRET_KEY` and `DEBUG=False` for deployment. The application
+refuses to start in non-debug mode without a key. See `.env.example` for the
+available settings. Keep uploads, FAISS data, and the database on persistent
+private storage. `python evaluation/retrieval_evaluation.py` runs the existing
+retrieval evaluation against a populated local database; its heuristic
+faithfulness/relevance indicators are not model-judged metrics.
+
 ### Troubleshooting startup
 
 - If model loading fails, verify that the embedding dependencies are installed
