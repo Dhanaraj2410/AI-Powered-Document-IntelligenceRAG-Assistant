@@ -48,10 +48,11 @@ class Document(models.Model):
 
 
 class DocumentChunk(models.Model):
-    """Text chunk extracted from PDF document with page number and FAISS vector reference."""
+    """Text chunk extracted from a document with source location and vector reference."""
     document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='chunks')
     chunk_index = models.IntegerField()
     page_number = models.IntegerField()
+    section = models.CharField(max_length=500, blank=True, default='')
     content = models.TextField()
     vector_id = models.IntegerField(db_index=True)
     index_version = models.IntegerField(default=1)
@@ -74,6 +75,7 @@ class Conversation(models.Model):
         DocumentCollection, on_delete=models.SET_NULL, null=True, blank=True, related_name='conversations'
     )
     title = models.CharField(max_length=255, default='New Conversation')
+    summary = models.TextField(blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
