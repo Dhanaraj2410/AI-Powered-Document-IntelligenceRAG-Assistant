@@ -1,6 +1,8 @@
 from typing import List, Dict, Optional
 import logging
 from rag_app.models import DocumentChunk
+from django.conf import settings
+from django.utils.module_loading import import_string
 from .embedding_service import EmbeddingService
 from .vector_service import VectorService
 from .bm25_service import BM25Service
@@ -9,7 +11,12 @@ logger = logging.getLogger(__name__)
 
 class HybridRetrieverService:
     def __init__(self):
-        self.vector_service = VectorService()
+        vector_class = import_string(getattr(settings, 'VECTOR_SERVICE_CLASS', 'rag_app.services.vector_service.VectorService'))
+        self.vector_service = vector_class()
+
+    @staticmethod
+    def _embedding_service():
+        return import_string(getattr(settings, 'EMBEDDING_SERVICE_CLASS', 'rag_app.services.embedding_service.EmbeddingService'))
 
     def retrieve_relevant_chunks(
         self,
@@ -17,7 +24,7 @@ class HybridRetrieverService:
         user_id: int,
         document_id: Optional[int] = None,
         collection_id: Optional[int] = None,
-        top_k: int = 5
+        top_k: int = None
     ) -> List[Dict[str, any]]:
         """
         Performs Hybrid Search (FAISS Semantic Vector Search + BM25 Keyword Search)
@@ -33,6 +40,9 @@ class HybridRetrieverService:
                 "retrieval_score": float
             }]
         """
+        top_k = top_k or getattr(settings, 'TOP_K_RETRIEVAL', 5)
+        if top_k < 1:
+            return []
         # 1. Base queryset filtered strictly by user and document/collection
         chunk_qs = DocumentChunk.objects.select_related('document').filter(document__user_id=user_id)
 
@@ -47,7 +57,7 @@ class HybridRetrieverService:
             return []
 
         # 2. FAISS Semantic Search
-        query_vector = EmbeddingService.generate_single_embedding(query)
+        query_vector = self._embedding_service().generate_single_embedding(query)
         faiss_results = self.vector_service.search_vectors(query_vector, top_k=top_k * 3)
 
         # Map vector_ids to authorized DocumentChunk models
@@ -111,8 +121,10 @@ class HybridRetrieverService:
                 "document_id": c.document.id,
                 "document_title": c.document.title,
                 "page_number": c.page_number,
+                "section": c.section,
                 "content": c.content,
                 "retrieval_score": item["score"]
             })
 
-        return final_results
+        threshold = getattr(settings, 'RETRIEVAL_SCORE_THRESHOLD', 0.0)
+        return [result for result in final_results if result['retrieval_score'] >= threshold]
