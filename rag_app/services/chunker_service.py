@@ -1,4 +1,5 @@
 from typing import List, Dict
+import re
 from django.conf import settings
 from .cleaner_service import CleanerService
 
@@ -32,47 +33,59 @@ class ChunkerService:
 
             page_chunks = self._split_text(cleaned_text)
 
-            for chunk_text in page_chunks:
+            for chunk_text, section in page_chunks:
                 if len(chunk_text.strip()) > 10:  # Ignore tiny noise chunks
                     chunks.append({
                         "chunk_index": global_chunk_idx,
                         "page_number": page_num,
+                        "section": section,
                         "content": chunk_text.strip()
                     })
                     global_chunk_idx += 1
 
         return chunks
 
-    def _split_text(self, text: str) -> List[str]:
-        """Sliding window text chunker with overlap."""
-        if len(text) <= self.chunk_size:
-            return [text]
+    def _split_text(self, text: str) -> List[tuple]:
+        """Split on headings and paragraph boundaries, with bounded overlap."""
+        lines = text.splitlines()
+        sections, current_heading, body = [], "", []
+        heading_re = re.compile(r"^(?:#{1,6}\s+|\d+(?:\.\d+)*[.)]?\s+|[A-Z][A-Z\d &,:()/-]{2,}$)")
+        for line in lines:
+            line = line.strip()
+            if not line:
+                if body:
+                    sections.append((current_heading, " ".join(body)))
+                    body = []
+                continue
+            if heading_re.match(line) and len(line) < 180:
+                if body:
+                    sections.append((current_heading, " ".join(body)))
+                    body = []
+                current_heading = line.lstrip('#').strip()
+            else:
+                body.append(line)
+        if body:
+            sections.append((current_heading, " ".join(body)))
 
         chunks = []
-        start = 0
-        text_length = len(text)
-
-        while start < text_length:
-            end = min(start + self.chunk_size, text_length)
-
-            # Try to break at a paragraph or sentence boundary if possible
-            if end < text_length:
-                last_newline = text.rfind('\n', start, end)
-                if last_newline != -1 and last_newline > start + (self.chunk_size // 2):
-                    end = last_newline + 1
-                else:
-                    last_period = text.rfind('. ', start, end)
-                    if last_period != -1 and last_period > start + (self.chunk_size // 2):
-                        end = last_period + 1
-
-            chunk_content = text[start:end]
-            chunks.append(chunk_content)
-
-            # Slide window forward by (chunk_size - overlap)
-            step = end - start - self.chunk_overlap
-            if step <= 0:
-                step = self.chunk_size // 2
-
-            start += step
-
+        carry = ""
+        for heading, paragraph in sections or [("", text)]:
+            prefix = f"{heading}\n" if heading else ""
+            text_to_split = (carry + " " + paragraph).strip() if carry else paragraph
+            if len(text_to_split) <= self.chunk_size:
+                chunks.append((prefix + text_to_split, heading))
+                carry = text_to_split[-self.chunk_overlap:] if self.chunk_overlap else ""
+                continue
+            start = 0
+            while start < len(text_to_split):
+                end = min(start + self.chunk_size, len(text_to_split))
+                if end < len(text_to_split):
+                    boundary = text_to_split.rfind(" ", start + self.chunk_size // 2, end)
+                    if boundary > start:
+                        end = boundary
+                value = text_to_split[start:end].strip()
+                if value:
+                    chunks.append((prefix + value, heading))
+                start = max(start + 1, end - self.chunk_overlap)
+            carry = ""
         return chunks
