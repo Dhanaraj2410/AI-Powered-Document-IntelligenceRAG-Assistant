@@ -9,10 +9,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-dev-key-change-me')
+SECRET_KEY = os.getenv('SECRET_KEY', '')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
+if not SECRET_KEY or SECRET_KEY.startswith('replace-with-'):
+    if DEBUG:
+        SECRET_KEY = 'unsafe-local-development-key-only'
+    else:
+        raise RuntimeError('SECRET_KEY must be configured when DEBUG is disabled')
 
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0').split(',')]
 
@@ -134,6 +139,11 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.AnonRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {'user': '120/hour', 'anon': '20/hour'},
 }
 
 # Login / Logout redirect URLs
@@ -152,6 +162,13 @@ EMBEDDING_MODEL_NAME = os.getenv('EMBEDDING_MODEL_NAME', 'all-MiniLM-L6-v2')
 CHUNK_SIZE = int(os.getenv('CHUNK_SIZE', '1000'))
 CHUNK_OVERLAP = int(os.getenv('CHUNK_OVERLAP', '150'))
 TOP_K_RETRIEVAL = int(os.getenv('TOP_K_RETRIEVAL', '5'))
+RERANK_TOP_K = int(os.getenv('RERANK_TOP_K', '4'))
+RETRIEVAL_SCORE_THRESHOLD = float(os.getenv('RETRIEVAL_SCORE_THRESHOLD', '0.0'))
+MAX_UPLOAD_SIZE = int(os.getenv('MAX_UPLOAD_SIZE', str(10 * 1024 * 1024)))
+ALLOWED_UPLOAD_EXTENSIONS = {'.pdf', '.docx', '.pptx', '.xlsx', '.csv', '.txt', '.md'}
+VECTOR_STORE_BACKEND = os.getenv('VECTOR_STORE_BACKEND', 'faiss')
+EMBEDDING_SERVICE_CLASS = os.getenv('EMBEDDING_SERVICE_CLASS', 'rag_app.services.embedding_service.EmbeddingService')
+VECTOR_SERVICE_CLASS = os.getenv('VECTOR_SERVICE_CLASS', 'rag_app.services.vector_service.VectorService')
 
 VECTOR_STORE_DIR = BASE_DIR / 'data' / 'vector_store'
 UPLOADS_DIR = BASE_DIR / 'data' / 'uploads'

@@ -18,9 +18,9 @@ services:
       timeout: 5s
       retries: 3
     environment:
-      - DEBUG=True
-      - SECRET_KEY=django-insecure-docker-key-2026
-      - OPENAI_MODEL=gpt-4o-mini
+      DEBUG: ${DEBUG:-False}
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
     restart: always
 
 volumes:
