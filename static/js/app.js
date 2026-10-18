@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return cookieValue;
     }
 
-    // --- Drag & Drop PDF Upload Handling ---
+    // --- Drag & Drop Document Upload Handling ---
     const dropzone = document.getElementById('uploadDropzone');
     const fileInput = document.getElementById('pdfFileInput');
     const uploadProgress = document.getElementById('uploadProgress');
@@ -57,8 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleFileUpload(file) {
-        if (!file.name.toLowerCase().endsWith('.pdf')) {
-            alert('Please select a valid PDF document.');
+        if (!/\.(pdf|docx|pptx|xlsx|csv|txt|md)$/i.test(file.name)) {
+            alert('Choose a PDF, DOCX, PPTX, XLSX, CSV, TXT, or Markdown file.');
             return;
         }
 
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (uploadProgress) uploadProgress.classList.remove('d-none');
-        if (uploadStatusText) uploadStatusText.textContent = `Extracting text & analyzing suggested questions for "${file.name}"...`;
+        if (uploadStatusText) uploadStatusText.textContent = `Uploading and queueing "${file.name}"...`;
 
         fetch('/api/upload/', {
             method: 'POST',
@@ -84,7 +84,21 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(data => {
             if (data.success) {
                 if (uploadStatusText) uploadStatusText.textContent = `✓ Upload & Analysis Completed for "${file.name}"!`;
-                setTimeout(() => window.location.reload(), 1200);
+                const documentId = data.document && data.document.id;
+                const pollStatus = () => fetch(`/api/documents/${documentId}/`)
+                    .then(response => response.json())
+                    .then(doc => {
+                        if (doc.status === 'completed') {
+                            if (uploadStatusText) uploadStatusText.textContent = `Indexed "${file.name}".`;
+                            setTimeout(() => window.location.reload(), 800);
+                        } else if (doc.status === 'failed') {
+                            if (uploadStatusText) uploadStatusText.textContent = doc.processing_error || 'Ingestion failed.';
+                        } else {
+                            if (uploadStatusText) uploadStatusText.textContent = `Processing "${file.name}"...`;
+                            setTimeout(pollStatus, 1500);
+                        }
+                    }).catch(() => setTimeout(pollStatus, 3000));
+                if (documentId) pollStatus();
             } else {
                 alert(`Upload Failed: ${data.message || data.error}`);
                 if (uploadProgress) uploadProgress.classList.add('d-none');
