@@ -27,3 +27,12 @@ class ChunkerServiceTestCase(TestCase):
     def test_chunker_rejects_invalid_overlap(self):
         with self.assertRaises(ValueError):
             ChunkerService(chunk_size=20, chunk_overlap=20)
+
+    def test_chunker_preserves_heading_as_section_metadata(self):
+        chunks = self.chunker.create_chunks_from_pages([{
+            "page": 3,
+            "text": "## Revenue\n\nRevenue grew by 12 percent in the fiscal year.\n\nOperating margin improved."
+        }])
+        self.assertEqual(chunks[0]["section"], "Revenue")
+        self.assertEqual(chunks[0]["page_number"], 3)
+        self.assertIn("Revenue grew", chunks[0]["content"])
