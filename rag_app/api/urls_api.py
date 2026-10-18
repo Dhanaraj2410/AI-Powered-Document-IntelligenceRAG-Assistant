@@ -4,7 +4,7 @@ from .views_api import (
     HealthCheckView, DocumentCollectionViewSet, DocumentViewSet,
     DocumentUploadAPIView, ChatAPIView, SearchAPIView, ConversationViewSet,
     SummaryAPIView, CompareAPIView, BookmarkViewSet, FeedbackAPIView,
-    EvaluationResultViewSet
+    EvaluationResultViewSet, ExportAPIView
 )
 
 router = DefaultRouter()
@@ -16,6 +16,7 @@ router.register(r'evaluations', EvaluationResultViewSet, basename='evaluation')
 
 urlpatterns = [
     path('health/', HealthCheckView.as_view(), name='api-health'),
+    path('export/', ExportAPIView.as_view(), name='api-export'),
     path('upload/', DocumentUploadAPIView.as_view(), name='api-upload'),
     path('chat/', ChatAPIView.as_view(), name='api-chat'),
     path('search/', SearchAPIView.as_view(), name='api-search'),

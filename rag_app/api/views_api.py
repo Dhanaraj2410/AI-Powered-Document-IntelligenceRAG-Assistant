@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from django.db import close_old_connections
+from django.http import HttpResponse
+from io import BytesIO
 from threading import Thread
 from rag_app.models import DocumentCollection, Document, Conversation, Message, Bookmark, Feedback, EvaluationResult
 from rag_app.services.rag_service import RAGService
@@ -34,6 +36,73 @@ class HealthCheckView(APIView):
             "service": "AI Document Intelligence & Enterprise RAG Assistant",
             "version": "2.0.0"
         })
+
+
+class ExportAPIView(APIView):
+    """Export an owned answer or complete conversation as a private download."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        export_format = request.data.get('format', 'pdf')
+        if export_format not in {'pdf', 'docx'}:
+            return Response({'error': 'format must be pdf or docx'}, status=status.HTTP_400_BAD_REQUEST)
+        message_id = request.data.get('message_id')
+        conversation_id = request.data.get('conversation_id')
+        if bool(message_id) == bool(conversation_id):
+            return Response({'error': 'Provide exactly one message_id or conversation_id.'}, status=status.HTTP_400_BAD_REQUEST)
+        if message_id:
+            messages = Message.objects.filter(pk=message_id, conversation__user=request.user)
+        else:
+            messages = Message.objects.filter(conversation_id=conversation_id, conversation__user=request.user).order_by('created_at')
+        rows = list(messages.values_list('role', 'content', 'sources'))
+        if not rows:
+            return Response({'error': 'No owned answer or conversation was found.'}, status=status.HTTP_404_NOT_FOUND)
+        content = '\n\n'.join(f'{role.title()}: {text}' for role, text, _ in rows)
+        output = BytesIO()
+        if export_format == 'docx':
+            from docx import Document as WordDocument
+            document = WordDocument()
+            document.add_heading('Document Intelligence Conversation', 0)
+            for role, text, sources in rows:
+                document.add_heading(role.title(), level=2)
+                document.add_paragraph(text)
+                for source in sources or []:
+                    document.add_paragraph(
+                        f"Source: {source.get('document_title', 'Document')}, page {source.get('page_number', 'N/A')} — "
+                        f"{source.get('passage', source.get('chunk_preview', ''))}"
+                    )
+            document.save(output)
+            mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        else:
+            import fitz
+            import textwrap
+            pdf = fitz.open()
+            page = pdf.new_page()
+            y = 50
+            for line in content.splitlines():
+                for wrapped in textwrap.wrap(line, width=95) or ['']:
+                    if y > 770:
+                        page = pdf.new_page()
+                        y = 50
+                    page.insert_text((50, y), wrapped, fontsize=10)
+                    y += 15
+            for role, _, sources in rows:
+                if role == 'assistant' and sources:
+                    for source in sources:
+                        if y > 740:
+                            page = pdf.new_page()
+                            y = 50
+                        citation = f"Source: {source.get('document_title', 'Document')}, page {source.get('page_number', 'N/A')}"
+                        page.insert_textbox(fitz.Rect(50, y, 545, min(y + 50, 790)), citation, fontsize=9)
+                        y += 30
+            pdf.save(output)
+            pdf.close()
+            mime = 'application/pdf'
+        output.seek(0)
+        response = HttpResponse(output.read(), content_type=mime)
+        response['Content-Disposition'] = f'attachment; filename="conversation.{export_format}"'
+        response['X-Content-Type-Options'] = 'nosniff'
+        return response
 
 
 class DocumentCollectionViewSet(viewsets.ModelViewSet):
