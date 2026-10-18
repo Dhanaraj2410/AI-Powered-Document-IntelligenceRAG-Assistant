@@ -146,6 +146,14 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {'user': '120/hour', 'anon': '20/hour'},
 }
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {'json': {'()': 'rag_app.logging.JsonLogFormatter'}},
+    'handlers': {'console': {'class': 'logging.StreamHandler', 'formatter': 'json'}},
+    'root': {'handlers': ['console'], 'level': os.getenv('LOG_LEVEL', 'INFO')},
+}
+
 # Login / Logout redirect URLs
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
