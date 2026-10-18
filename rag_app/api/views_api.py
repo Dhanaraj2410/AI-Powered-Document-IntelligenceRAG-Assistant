@@ -3,6 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
+from django.db import close_old_connections
+from threading import Thread
 from rag_app.models import DocumentCollection, Document, Conversation, Message, Bookmark, Feedback, EvaluationResult
 from rag_app.services.rag_service import RAGService
 from rag_app.services.analysis_service import AnalysisService
@@ -14,6 +16,14 @@ from .serializers import (
     DocumentUploadSerializer, ChatQuerySerializer, SummaryRequestSerializer,
     SearchRequestSerializer, CompareRequestSerializer, EvaluationResultSerializer
 )
+
+
+def _process_document_async(document_id):
+    close_old_connections()
+    try:
+        RAGService().process_document(document_id)
+    finally:
+        close_old_connections()
 
 class HealthCheckView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -47,17 +57,25 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def perform_destroy(self, instance):
+        file_field = instance.file
+        instance.delete()  # cascades chunks first, preserving tenant ownership checks
+        if file_field:
+            file_field.delete(save=False)
+        from rag_app.services.vector_service import VectorService
+        VectorService.rebuild_from_database()
+
     @action(detail=True, methods=['post'])
     def reprocess(self, request, pk=None):
         doc = self.get_object()
-        rag_service = RAGService()
-        success = rag_service.process_document(doc.id)
-        
-        doc.refresh_from_db()
+        doc.status = 'uploaded'
+        doc.processing_error = ''
+        doc.save(update_fields=['status', 'processing_error'])
+        Thread(target=_process_document_async, args=(doc.id,), daemon=True).start()
         return Response({
-            "success": success,
+            "success": True,
             "document": DocumentSerializer(doc).data,
-            "message": "Document reprocessed successfully." if success else doc.processing_error
+            "message": "Document reprocessing started."
         })
 
     @action(detail=True, methods=['get'])
@@ -76,9 +94,6 @@ class DocumentUploadAPIView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         uploaded_file = serializer.validated_data['file']
-        if not uploaded_file.name.lower().endswith('.pdf'):
-            return Response({"error": "Only PDF documents are supported."}, status=status.HTTP_400_BAD_REQUEST)
-
         collection_id = serializer.validated_data.get('collection_id')
         collection = None
         if collection_id:
@@ -95,18 +110,14 @@ class DocumentUploadAPIView(APIView):
             status='uploaded'
         )
 
-        rag_service = RAGService()
-        process_success = rag_service.process_document(doc.id)
-        doc.refresh_from_db()
-
-        res_status = status.HTTP_201_CREATED if process_success else status.HTTP_400_BAD_REQUEST
+        Thread(target=_process_document_async, args=(doc.id,), daemon=True).start()
 
         return Response({
-            "success": process_success,
+            "success": True,
             "document": DocumentSerializer(doc).data,
             "suggested_questions": doc.suggested_questions,
-            "message": "Document uploaded and indexed successfully." if process_success else f"Upload failed: {doc.processing_error}"
-        }, status=res_status)
+            "message": "Document uploaded; ingestion started. Poll the document endpoint for status."
+        }, status=status.HTTP_202_ACCEPTED)
 
 
 class ChatAPIView(APIView):
