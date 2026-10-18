@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from django.conf import settings
+from pathlib import Path
 from rag_app.models import DocumentCollection, Document, DocumentChunk, Conversation, Message, Bookmark, Feedback, EvaluationResult
 
 class DocumentCollectionSerializer(serializers.ModelSerializer):
@@ -98,6 +100,26 @@ class DocumentUploadSerializer(serializers.Serializer):
     file = serializers.FileField(required=True)
     collection_id = serializers.IntegerField(required=False, allow_null=True)
     title = serializers.CharField(required=False, allow_blank=True, max_length=255)
+
+    def validate_file(self, uploaded):
+        suffix = Path(uploaded.name).suffix.lower()
+        if suffix not in settings.ALLOWED_UPLOAD_EXTENSIONS:
+            raise serializers.ValidationError('Unsupported file type.')
+        if uploaded.size > settings.MAX_UPLOAD_SIZE:
+            raise serializers.ValidationError('File exceeds the configured upload size limit.')
+        content_type = (getattr(uploaded, 'content_type', '') or '').lower()
+        if content_type and content_type not in {'application/octet-stream', 'text/plain', 'text/csv', 'text/markdown',
+                'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}:
+            raise serializers.ValidationError('Unexpected content type.')
+        position = uploaded.tell()
+        header = uploaded.read(8)
+        uploaded.seek(position)
+        expected = {'.pdf': b'%PDF-', '.docx': b'PK', '.pptx': b'PK', '.xlsx': b'PK'}
+        if suffix in expected and not header.startswith(expected[suffix]):
+            raise serializers.ValidationError('File signature does not match its extension.')
+        return uploaded
 
 
 class ChatQuerySerializer(serializers.Serializer):
