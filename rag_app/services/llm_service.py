@@ -109,6 +109,8 @@ class LLMService:
 
         if "DOCUMENT CONTEXT:" in context_text:
             context_text = context_text.split("DOCUMENT CONTEXT:")[1]
+        elif "UNTRUSTED DOCUMENT DATA" in context_text:
+            context_text = context_text.split("UNTRUSTED DOCUMENT DATA", 1)[1]
 
         context_text = context_text.replace("Please answer the question based strictly on the document context above.", "").strip()
 
@@ -119,7 +121,9 @@ class LLMService:
                 "error": ""
             }
 
-        source_blocks = re.findall(r'\[Source \d+: Document \'(.*?)\', Page (\d+)\]\n(.*?)(?=\[Source \d+:|\Z)', context_text, re.DOTALL)
+        source_blocks = re.findall(r'<source id="\d+" document="(.*?)" page="(.*?)">\s*(.*?)\s*</source>', context_text, re.DOTALL)
+        if not source_blocks:
+            source_blocks = re.findall(r'\[Source \d+: Document \'(.*?)\', Page (\d+)\]\n(.*?)(?=\[Source \d+:|\Z)', context_text, re.DOTALL)
 
         if not source_blocks:
             clean_snippet = context_text[:500].strip()
