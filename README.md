@@ -180,6 +180,11 @@ private storage. `python evaluation/retrieval_evaluation.py` runs the existing
 retrieval evaluation against a populated local database; its heuristic
 faithfulness/relevance indicators are not model-judged metrics.
 
+`POST /api/export/` downloads an owned assistant message or full conversation
+as PDF or DOCX. Pass `message_id` or `conversation_id` and a `format` of `pdf`
+or `docx`. The chat UI currently animates the completed response;
+provider-token streaming is not yet implemented.
+
 ### Troubleshooting startup
 
 - If model loading fails, verify that the embedding dependencies are installed
@@ -196,13 +201,14 @@ faithfulness/relevance indicators are not model-judged metrics.
 | Endpoint | Method | Description |
 |---|---|---|
 | `/api/health/` | `GET` | System health check |
-| `/api/upload/` | `POST` | Upload PDF file and initiate FAISS vector indexing |
+| `/api/upload/` | `POST` | Validate upload and start document ingestion |
 | `/api/chat/` | `POST` | Query RAG pipeline with natural language questions |
 | `/api/search/` | `POST` | Execute standalone Hybrid Search (FAISS + BM25) candidate ranking |
 | `/api/compare/` | `POST` | Synthesize side-by-side document comparison report |
 | `/api/summary/` | `POST` | Generate multi-mode document summary |
 | `/api/bookmarks/` | `GET` / `POST` | Manage saved Q&A bookmarks |
 | `/api/feedback/` | `POST` | Submit user ratings (+1 / -1) and comments |
+| `/api/export/` | `POST` | Export an owned answer or conversation to PDF or DOCX |
 
 ---
 
@@ -214,22 +220,11 @@ Run the offline evaluation benchmark:
 python evaluation/retrieval_evaluation.py
 ```
 
-The script prints metrics calculated from the benchmark dataset and the documents
-indexed for the first user in the local database. Results depend on that data and
-will differ between runs and environments; the values below are an example format,
-not a guaranteed benchmark result.
-
-```text
-============================================================
-RAG BENCHMARK EVALUATION RESULTS
-============================================================
-  Retrieval Precision@K: 89.0%
-  Mean Reciprocal Rank (MRR): 0.91
-  Faithfulness / Grounding Score: 94.0%
-  Answer Relevance Score: 92.0%
-  Average Pipeline Latency: 1.780 seconds
-============================================================
-```
+The script measures retrieval against the dataset and indexed target documents
+for the first user in the local database. Missing target documents are counted
+and reported as skipped. Answer faithfulness and relevance are local lexical
+overlap proxies, not model-judged metrics. No benchmark result is claimed here;
+results depend on the documents and environment used for a run.
 
 ---
 

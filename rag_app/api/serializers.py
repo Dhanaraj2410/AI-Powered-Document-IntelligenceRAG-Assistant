@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.conf import settings
 from pathlib import Path
+from zipfile import ZipFile, BadZipFile
 from rag_app.models import DocumentCollection, Document, DocumentChunk, Conversation, Message, Bookmark, Feedback, EvaluationResult
 
 class DocumentCollectionSerializer(serializers.ModelSerializer):
@@ -15,7 +16,7 @@ class DocumentCollectionSerializer(serializers.ModelSerializer):
 class DocumentChunkSerializer(serializers.ModelSerializer):
     class Meta:
         model = DocumentChunk
-        fields = ['id', 'chunk_index', 'page_number', 'content', 'vector_id']
+        fields = ['id', 'chunk_index', 'page_number', 'section', 'content', 'vector_id']
 
 
 class DocumentSerializer(serializers.ModelSerializer):
@@ -108,10 +109,16 @@ class DocumentUploadSerializer(serializers.Serializer):
         if uploaded.size > settings.MAX_UPLOAD_SIZE:
             raise serializers.ValidationError('File exceeds the configured upload size limit.')
         content_type = (getattr(uploaded, 'content_type', '') or '').lower()
-        if content_type and content_type not in {'application/octet-stream', 'text/plain', 'text/csv', 'text/markdown',
-                'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}:
+        expected_types = {
+            '.pdf': {'application/pdf', 'application/octet-stream'},
+            '.docx': {'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/octet-stream'},
+            '.pptx': {'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/octet-stream'},
+            '.xlsx': {'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/octet-stream'},
+            '.csv': {'text/csv', 'application/csv', 'application/vnd.ms-excel', 'text/plain', 'application/octet-stream'},
+            '.txt': {'text/plain', 'application/octet-stream'},
+            '.md': {'text/markdown', 'text/plain', 'application/octet-stream'},
+        }
+        if content_type and content_type not in expected_types[suffix]:
             raise serializers.ValidationError('Unexpected content type.')
         position = uploaded.tell()
         header = uploaded.read(8)
@@ -119,6 +126,21 @@ class DocumentUploadSerializer(serializers.Serializer):
         expected = {'.pdf': b'%PDF-', '.docx': b'PK', '.pptx': b'PK', '.xlsx': b'PK'}
         if suffix in expected and not header.startswith(expected[suffix]):
             raise serializers.ValidationError('File signature does not match its extension.')
+        if suffix in {'.docx', '.pptx', '.xlsx'}:
+            members = {
+                '.docx': 'word/document.xml',
+                '.pptx': 'ppt/presentation.xml',
+                '.xlsx': 'xl/workbook.xml',
+            }
+            try:
+                uploaded.seek(0)
+                with ZipFile(uploaded) as archive:
+                    if members[suffix] not in archive.namelist():
+                        raise serializers.ValidationError('Office file contents do not match its extension.')
+            except BadZipFile as exc:
+                raise serializers.ValidationError('Invalid Office document archive.') from exc
+            finally:
+                uploaded.seek(position)
         return uploaded
 
 
