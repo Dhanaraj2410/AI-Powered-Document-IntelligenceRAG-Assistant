@@ -37,6 +37,17 @@ class PDFService:
                 for page_idx in range(len(doc)):
                     page = doc[page_idx]
                     page_text = page.get_text("text") or ""
+                    # Preserve table rows as pipe-delimited text for keyword and semantic retrieval.
+                    try:
+                        table_finder = page.find_tables()
+                        for table in table_finder.tables:
+                            rows = table.extract()
+                            page_text += "\n\n" + "\n".join(
+                                " | ".join(str(cell or "") for cell in row) for row in rows
+                            )
+                    except (AttributeError, ValueError):
+                        # Table detection is not available for every PyMuPDF build/page.
+                        pass
                     pages_data.append({
                         "page": page_idx + 1,
                         "text": page_text
