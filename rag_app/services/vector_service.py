@@ -104,3 +104,19 @@ class VectorService:
             logger.info(f"Saved FAISS index ({index.ntotal} vectors) to {self.index_file}")
         except Exception as e:
             logger.error(f"Failed to save FAISS index: {str(e)}", exc_info=True)
+
+    @classmethod
+    def rebuild_from_database(cls):
+        """Rebuild the shared index and stable row mapping after document deletion."""
+        from rag_app.models import DocumentChunk
+        from .embedding_service import EmbeddingService
+        chunks = list(DocumentChunk.objects.select_related('document').order_by('id'))
+        service = cls()
+        index = faiss.IndexFlatIP(service.dimension)
+        if chunks:
+            embeddings = EmbeddingService.generate_embeddings([chunk.content for chunk in chunks])
+            index.add(embeddings)
+        service._save_index(index)
+        for vector_id, chunk in enumerate(chunks):
+            if chunk.vector_id != vector_id:
+                DocumentChunk.objects.filter(pk=chunk.pk).update(vector_id=vector_id)
