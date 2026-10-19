@@ -122,10 +122,23 @@ pip install -r requirements.txt
 
 ### 3. Configure Environment Variables
 
-Create `.env` file in root directory:
+Copy `.env.example` to `.env` in the repository root, then set a private
+Django secret key and enable debug mode for local development. Generate a key
+with:
+
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+Paste the generated value into `SECRET_KEY` in `.env`. Keep `.env` private and
+out of version control. For local development, set `DEBUG=True`. A Gemini or
+OpenAI API key is only needed when using that provider for answer generation.
+The remaining settings can stay at their `.env.example` defaults.
+
+The relevant `.env` settings look like this:
 
 ```env
-SECRET_KEY=django-insecure-dev-secret-key
+SECRET_KEY=paste-your-generated-key-here
 DEBUG=True
 GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_MODEL=gemini-1.5-flash
