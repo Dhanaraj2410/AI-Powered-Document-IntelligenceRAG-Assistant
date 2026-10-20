@@ -150,12 +150,26 @@ def chat_view(request):
         if active_conv:
             chat_messages = active_conv.messages.all()
 
+    # Preserve scope when entering chat from Documents, Collections, or a
+    # saved conversation. Invalid IDs are ignored so the page remains usable.
+    selected_doc_id = request.GET.get('doc_id')
+    selected_collection_id = request.GET.get('coll_id')
+    if selected_doc_id and not documents.filter(id=selected_doc_id).exists():
+        selected_doc_id = ''
+    if selected_collection_id and not collections.filter(id=selected_collection_id).exists():
+        selected_collection_id = ''
+    if active_conv:
+        selected_doc_id = selected_doc_id or str(active_conv.document_id or '')
+        selected_collection_id = selected_collection_id or str(active_conv.collection_id or '')
+
     context = {
         'documents': documents,
         'collections': collections,
         'conversations': conversations,
         'active_conv': active_conv,
-        'chat_messages': chat_messages
+        'chat_messages': chat_messages,
+        'selected_doc_id': selected_doc_id or '',
+        'selected_collection_id': selected_collection_id or '',
     }
     return render(request, 'chat.html', context)
 
