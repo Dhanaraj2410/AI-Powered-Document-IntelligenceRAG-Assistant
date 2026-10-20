@@ -172,6 +172,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    document.getElementById('clearChatScope')?.addEventListener('click', () => {
+        if (chatDocSelect) chatDocSelect.value = '';
+        const collectionSelect = document.getElementById('chatCollSelect');
+        if (collectionSelect) collectionSelect.value = '';
+        if (suggestedQuestionsList) {
+            suggestedQuestionsList.innerHTML = '<div class="text-muted small py-2">Choose a document to see tailored questions.</div>';
+        }
+    });
+
     // --- RAG Chat Query & Step-by-Step Thinking Handler ---
     const chatForm = document.getElementById('chatForm');
     const chatInput = document.getElementById('chatInput');
