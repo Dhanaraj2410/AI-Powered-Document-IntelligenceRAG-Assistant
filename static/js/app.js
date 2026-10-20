@@ -177,6 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatInput = document.getElementById('chatInput');
     const chatMessages = document.getElementById('chatMessages');
     const chatCharCount = document.getElementById('chatCharCount');
+    const chatSubmitButton = document.getElementById('chatSubmitButton');
+    let chatRequestPending = false;
 
     if (chatInput) {
         const updateComposer = () => {
@@ -199,7 +201,14 @@ document.addEventListener('DOMContentLoaded', () => {
         chatForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const question = chatInput.value.trim();
-            if (!question) return;
+            if (!question || chatRequestPending) return;
+
+            chatRequestPending = true;
+            if (chatSubmitButton) {
+                chatSubmitButton.disabled = true;
+                chatSubmitButton.setAttribute('aria-busy', 'true');
+            }
+            chatInput.disabled = true;
 
             appendUserMessage(question);
             chatInput.value = '';
@@ -227,6 +236,12 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => res.json())
             .then(data => {
                 removeLoadingMessage(loadingBubbleId);
+                chatRequestPending = false;
+                chatInput.disabled = false;
+                if (chatSubmitButton) {
+                    chatSubmitButton.disabled = false;
+                    chatSubmitButton.removeAttribute('aria-busy');
+                }
                 if (data.answer) {
                     streamAssistantMessage(data, question);
                     if (data.conversation_id && (!currentConvId || currentConvId != data.conversation_id)) {
@@ -239,6 +254,12 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(err => {
                 removeLoadingMessage(loadingBubbleId);
+                chatRequestPending = false;
+                chatInput.disabled = false;
+                if (chatSubmitButton) {
+                    chatSubmitButton.disabled = false;
+                    chatSubmitButton.removeAttribute('aria-busy');
+                }
                 appendFriendlyError(question);
             });
         });
