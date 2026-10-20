@@ -132,6 +132,58 @@
         {% endif %}
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const button = document.getElementById('generateSummaryBtn');
+    const modeSelect = document.getElementById('summaryModeSelect');
+    const output = document.getElementById('summaryOutput');
+    if (!button || !modeSelect || !output) return;
+
+    button.addEventListener('click', async function () {
+        const originalLabel = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Generating...';
+        output.innerHTML = '<div class="p-3 bg-dark rounded border border-info text-info small">Analyzing the document...</div>';
+        try {
+            const response = await fetch('/api/summary/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    document_id: Number(button.dataset.docId),
+                    mode: modeSelect.value
+                })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || data.summary || 'Summary generation failed.');
+            }
+            const heading = document.createElement('div');
+            heading.className = 'fw-bold text-info mb-2';
+            heading.textContent = data.mode.replace('_', ' ').replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
+            const content = document.createElement('div');
+            content.className = 'p-3 bg-dark rounded border border-secondary text-light small';
+            content.style.whiteSpace = 'pre-wrap';
+            content.textContent = data.summary || 'No summary was generated.';
+            output.replaceChildren(heading, content);
+        } catch (error) {
+            output.innerHTML = '<div class="p-3 bg-dark rounded border border-danger text-danger small"></div>';
+            output.firstElementChild.textContent = error.message;
+        } finally {
+            button.disabled = false;
+            button.innerHTML = originalLabel;
+        }
+    });
+
+    function getCookie(name) {
+        const prefix = name + '=';
+        return document.cookie.split(';').map(function (part) { return part.trim(); })
+            .find(function (part) { return part.indexOf(prefix) === 0; })?.slice(prefix.length) || '';
+    }
+});
+</script>
 {% if chunks %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
