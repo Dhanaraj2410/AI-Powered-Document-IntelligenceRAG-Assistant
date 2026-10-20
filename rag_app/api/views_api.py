@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import status, viewsets, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -18,6 +20,8 @@ from .serializers import (
     DocumentUploadSerializer, ChatQuerySerializer, SummaryRequestSerializer,
     SearchRequestSerializer, CompareRequestSerializer, EvaluationResultSerializer
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _process_document_async(document_id):
@@ -202,14 +206,34 @@ class ChatAPIView(APIView):
         document_id = serializer.validated_data.get('document_id')
         collection_id = serializer.validated_data.get('collection_id')
 
-        rag_service = RAGService()
-        result = rag_service.query_rag(
-            question=question,
-            user_id=request.user.id,
-            conversation_id=conversation_id,
-            document_id=document_id,
-            collection_id=collection_id
-        )
+        if document_id and not Document.objects.filter(
+            id=document_id, user=request.user, status='completed'
+        ).exists():
+            return Response({'error': 'The selected document is not available.'}, status=status.HTTP_404_NOT_FOUND)
+        if collection_id and not DocumentCollection.objects.filter(
+            id=collection_id, user=request.user
+        ).exists():
+            return Response({'error': 'The selected collection is not available.'}, status=status.HTTP_404_NOT_FOUND)
+        if conversation_id and not Conversation.objects.filter(
+            id=conversation_id, user=request.user
+        ).exists():
+            return Response({'error': 'The selected conversation is not available.'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            rag_service = RAGService()
+            result = rag_service.query_rag(
+                question=question,
+                user_id=request.user.id,
+                conversation_id=conversation_id,
+                document_id=document_id,
+                collection_id=collection_id
+            )
+        except Exception:
+            logger.exception('Chat request failed for user_id=%s', request.user.id)
+            return Response(
+                {'error': 'The chat service is temporarily unavailable. Please try again.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
         return Response(result, status=status.HTTP_200_OK)
 
