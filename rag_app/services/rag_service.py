@@ -56,7 +56,14 @@ class RAGService:
             if existing_chunks.exists():
                 existing_chunks.delete()
                 from .vector_service import VectorService
-                VectorService.rebuild_from_database()
+                try:
+                    VectorService.rebuild_from_database()
+                except Exception:
+                    logger.warning(
+                        "Could not rebuild semantic index while reprocessing document %s; continuing with BM25.",
+                        doc_record.id,
+                        exc_info=True,
+                    )
 
             texts = [c['text'] for c in raw_chunks]
             metadata = [{
@@ -138,8 +145,16 @@ class RAGService:
             conv = Conversation.objects.create(
                 user_id=user_id,
                 document=doc_obj,
+                collection_id=collection_id,
                 title=conv_title
             )
+
+        # Keep follow-up questions in the same document/collection scope when
+        # the browser only sends conversation_id after the first turn.
+        if document_id is None and conv.document_id:
+            document_id = conv.document_id
+        if collection_id is None and conv.collection_id:
+            collection_id = conv.collection_id
 
         user_msg = Message.objects.create(
             conversation=conv,
