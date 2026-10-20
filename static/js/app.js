@@ -268,6 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     appendFriendlyError(question, data.error || data.message);
                 }
+                chatInput.focus();
             })
             .catch(err => {
                 removeLoadingMessage(loadingBubbleId);
@@ -279,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     chatSubmitButton.querySelector('span').textContent = 'Ask';
                 }
                 appendFriendlyError(question, err.message);
+                chatInput.focus();
             });
         });
     }
