@@ -207,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (chatSubmitButton) {
                 chatSubmitButton.disabled = true;
                 chatSubmitButton.setAttribute('aria-busy', 'true');
+                chatSubmitButton.querySelector('span').textContent = 'Thinking';
             }
             chatInput.disabled = true;
 
@@ -247,6 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (chatSubmitButton) {
                     chatSubmitButton.disabled = false;
                     chatSubmitButton.removeAttribute('aria-busy');
+                    chatSubmitButton.querySelector('span').textContent = 'Ask';
                 }
                 if (data.answer) {
                     streamAssistantMessage(data, question);
@@ -265,6 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (chatSubmitButton) {
                     chatSubmitButton.disabled = false;
                     chatSubmitButton.removeAttribute('aria-busy');
+                    chatSubmitButton.querySelector('span').textContent = 'Ask';
                 }
                 appendFriendlyError(question, err.message);
             });
