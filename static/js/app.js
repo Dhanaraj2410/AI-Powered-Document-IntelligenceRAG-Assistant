@@ -212,6 +212,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             appendUserMessage(question);
             chatInput.value = '';
+            chatInput.style.height = 'auto';
+            if (chatCharCount) chatCharCount.textContent = `0 / ${chatInput.maxLength}`;
 
             const loadingBubbleId = appendStepLoadingMessage();
             chatMessages.scrollTop = chatMessages.scrollHeight;
