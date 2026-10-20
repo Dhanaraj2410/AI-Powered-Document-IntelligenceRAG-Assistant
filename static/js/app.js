@@ -111,8 +111,54 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const createCollectionForm = document.getElementById('createCollectionForm');
+    if (createCollectionForm) {
+        createCollectionForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const submitButton = createCollectionForm.querySelector('button[type="submit"]');
+            const formData = new FormData(createCollectionForm);
+            const payload = {
+                name: String(formData.get('name') || '').trim(),
+                description: String(formData.get('description') || '').trim()
+            };
+            if (!payload.name) return;
+
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.setAttribute('aria-busy', 'true');
+            }
+            fetch(createCollectionForm.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(async response => {
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                        const detail = data.detail || data.name || data.error || 'Unable to create collection.';
+                        throw new Error(Array.isArray(detail) ? detail.join(', ') : String(detail));
+                    }
+                    return data;
+                })
+                .then(() => window.location.reload())
+                .catch(error => {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.removeAttribute('aria-busy');
+                    }
+                    alert(error.message);
+                });
+        });
+    }
+
     // --- Dynamic Suggested Questions Fetcher ---
     const chatDocSelect = document.getElementById('chatDocSelect');
+    const initialDocId = document.getElementById('chatSelectedDocId')?.value || '';
+    const initialCollectionId = document.getElementById('chatSelectedCollectionId')?.value || '';
+    const chatCollectionSelect = document.getElementById('chatCollSelect');
     const suggestedQuestionsList = document.getElementById('suggestedQuestionsList');
     const analysisSpinner = document.getElementById('analysisSpinner');
 
@@ -161,6 +207,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (chatDocSelect) {
+        if (initialDocId) chatDocSelect.value = initialDocId;
+        if (chatCollectionSelect && initialCollectionId) chatCollectionSelect.value = initialCollectionId;
         if (chatDocSelect.value) {
             fetchSuggestedQuestions(chatDocSelect.value);
         }
@@ -174,7 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('clearChatScope')?.addEventListener('click', () => {
         if (chatDocSelect) chatDocSelect.value = '';
-        const collectionSelect = document.getElementById('chatCollSelect');
+        const collectionSelect = chatCollectionSelect;
         if (collectionSelect) collectionSelect.value = '';
         if (suggestedQuestionsList) {
             suggestedQuestionsList.innerHTML = '<div class="text-muted small py-2">Choose a document to see tailored questions.</div>';
@@ -188,6 +236,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatCharCount = document.getElementById('chatCharCount');
     const chatSubmitButton = document.getElementById('chatSubmitButton');
     let chatRequestPending = false;
+
+    function setConversationExportState(enabled) {
+        document.querySelectorAll('.export-conversation-btn').forEach(button => {
+            button.disabled = !enabled;
+        });
+    }
+
+    document.querySelectorAll('.export-conversation-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            const conversationId = document.getElementById('currentConvId')?.value || '';
+            const format = button.getAttribute('data-format') || 'pdf';
+            if (!conversationId) return;
+
+            button.disabled = true;
+            try {
+                const response = await fetch('/api/export/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify({ conversation_id: Number(conversationId), format })
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Conversation export failed.');
+                }
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `conversation.${format}`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                setConversationExportState(Boolean(document.getElementById('currentConvId')?.value));
+            }
+        });
+    });
 
     if (chatInput) {
         const updateComposer = () => {
@@ -264,6 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.conversation_id && (!currentConvId || currentConvId != data.conversation_id)) {
                         const convIdInput = document.getElementById('currentConvId');
                         if (convIdInput) convIdInput.value = data.conversation_id;
+                        setConversationExportState(true);
                     }
                 } else {
                     appendFriendlyError(question, data.error || data.message);
