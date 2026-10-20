@@ -233,7 +233,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     collection_id: selectedCollection ? parseInt(selectedCollection) : null
                 })
             })
-            .then(res => res.json())
+            .then(async res => {
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.message || data.error || `Request failed (${res.status})`);
+                return data;
+            })
             .then(data => {
                 removeLoadingMessage(loadingBubbleId);
                 chatRequestPending = false;
@@ -249,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (convIdInput) convIdInput.value = data.conversation_id;
                     }
                 } else {
-                    appendFriendlyError(question);
+                    appendFriendlyError(question, data.error || data.message);
                 }
             })
             .catch(err => {
@@ -260,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     chatSubmitButton.disabled = false;
                     chatSubmitButton.removeAttribute('aria-busy');
                 }
-                appendFriendlyError(question);
+                appendFriendlyError(question, err.message);
             });
         });
     }
@@ -292,12 +296,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.remove();
     }
 
-    function appendFriendlyError(question) {
+    function appendFriendlyError(question, detail = '') {
         const div = document.createElement('div');
         div.className = 'chat-bubble chat-bubble-assistant w-100 border-danger';
         div.innerHTML = `
             <div class="text-danger fw-bold mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> ⚠️ Something went wrong</div>
-            <div class="text-light small mb-3">We couldn't process your request. Please check your internet connection or try again.</div>
+            <div class="text-light small mb-3">${escapeHtml(detail || "We couldn't process your request. Check your connection and try again.")}</div>
             <button class="btn btn-sm btn-outline-danger rounded-pill px-3 try-again-btn" data-q="${escapeHtml(question)}">
                 <i class="bi bi-arrow-clockwise me-1"></i> Try Again
             </button>
