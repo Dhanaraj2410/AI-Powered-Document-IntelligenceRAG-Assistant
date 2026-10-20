@@ -288,6 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function appendUserMessage(text) {
         const div = document.createElement('div');
         div.className = 'chat-bubble chat-bubble-user';
+        div.setAttribute('aria-label', 'Your message');
         div.textContent = text;
         chatMessages.appendChild(div);
     }
