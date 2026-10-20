@@ -283,6 +283,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const div = document.createElement('div');
         div.id = id;
         div.className = 'chat-bubble chat-bubble-assistant';
+        div.setAttribute('role', 'status');
+        div.setAttribute('aria-live', 'polite');
         div.innerHTML = `
             <div class="small fw-semibold text-info mb-2"><i class="bi bi-cpu spinner-border spinner-border-sm me-2"></i> AI is thinking...</div>
             <div class="small text-light mb-1"><span class="text-success me-1">✓</span> Searching vector documents</div>
