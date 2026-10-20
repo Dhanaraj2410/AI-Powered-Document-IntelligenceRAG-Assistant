@@ -361,7 +361,7 @@ a:not(.btn):focus-visible {
 }
 
 .chat-bubble {
-    max-width: 82%;
+    max-width: 88%;
     padding: 16px 22px;
     border-radius: 20px;
     margin-bottom: 20px;
@@ -390,6 +390,12 @@ a:not(.btn):focus-visible {
     color: #ffffff !important;
     align-self: flex-start;
     border-bottom-left-radius: 4px;
+}
+
+.chat-bubble-assistant p:last-child,
+.chat-bubble-assistant ul:last-child,
+.chat-bubble-assistant ol:last-child {
+    margin-bottom: 0;
 }
 
 .chat-bubble-assistant div, .chat-bubble-assistant span, .chat-bubble-assistant p {
