@@ -176,6 +176,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatForm = document.getElementById('chatForm');
     const chatInput = document.getElementById('chatInput');
     const chatMessages = document.getElementById('chatMessages');
+    const chatCharCount = document.getElementById('chatCharCount');
+
+    if (chatInput) {
+        const updateComposer = () => {
+            if (chatCharCount) chatCharCount.textContent = `${chatInput.value.length} / ${chatInput.maxLength}`;
+            chatInput.style.height = 'auto';
+            chatInput.style.height = `${Math.min(chatInput.scrollHeight, 160)}px`;
+        };
+
+        chatInput.addEventListener('input', updateComposer);
+        chatInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+                event.preventDefault();
+                chatForm?.requestSubmit();
+            }
+        });
+        updateComposer();
+    }
 
     if (chatForm && chatInput && chatMessages) {
         chatForm.addEventListener('submit', (e) => {
