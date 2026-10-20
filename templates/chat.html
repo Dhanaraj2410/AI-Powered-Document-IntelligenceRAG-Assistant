@@ -90,7 +90,7 @@
                 <input type="hidden" id="currentConvId" value="{% if active_conv %}{{ active_conv.id }}{% endif %}">
 
                 <!-- Messages Output Window -->
-                <div class="chat-messages d-flex flex-column p-4 flex-grow-1 overflow-auto" id="chatMessages">
+                <div class="chat-messages d-flex flex-column p-4 flex-grow-1 overflow-auto" id="chatMessages" role="log" aria-live="polite" aria-relevant="additions text" aria-label="Conversation messages" tabindex="0">
                     {% if chat_messages %}
                         {% for msg in chat_messages %}
                             {% if msg.role == 'user' %}
