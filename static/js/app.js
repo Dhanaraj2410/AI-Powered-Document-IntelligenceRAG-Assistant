@@ -397,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             data.sources.forEach((src, sIdx) => {
                 footerHtml += `
-                    <div class="citation-box mb-2 cursor-pointer inspect-source-btn"
+                    <button type="button" class="citation-box mb-2 w-100 text-start cursor-pointer inspect-source-btn"
                         data-doc-title="${escapeHtml(src.document_title)}"
                         data-doc-id="${src.document_id || ''}"
                         data-page="${src.page_number}"
@@ -409,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="badge badge-score">Relevance: ${src.retrieval_score}</span>
                         </div>
                         <div class="text-light small" style="font-style: italic;">"${escapeHtml(src.chunk_preview)}"</div>
-                    </div>
+                    </button>
                 `;
             });
         }

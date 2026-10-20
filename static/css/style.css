@@ -463,10 +463,18 @@ a:not(.btn):focus-visible {
 .citation-box {
     background: rgba(9, 13, 22, 0.85);
     border-left: 3px solid #38bdf8;
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 0;
     border-radius: 8px;
     padding: 12px 16px;
     margin-top: 10px;
+    color: #ffffff;
+    font: inherit;
 }
+
+button.citation-box { cursor: pointer; }
+button.citation-box:hover { background: rgba(15, 35, 55, 0.95); }
 
 .badge-score {
     background: rgba(56, 189, 248, 0.2);
