@@ -14,6 +14,32 @@ class HybridRetrieverService:
         vector_class = import_string(getattr(settings, 'VECTOR_SERVICE_CLASS', 'rag_app.services.vector_service.VectorService'))
         self.vector_service = vector_class()
 
+    def add_document_chunks(
+        self,
+        texts: List[str],
+        metadatas: List[Dict[str, any]],
+        user_id: int,
+        document_id: int,
+    ) -> List[int]:
+        """Index document chunks and return stable vector IDs.
+
+        Metadata is stored with the database chunk records by the caller. If
+        the optional embedding model is unavailable, negative IDs keep the
+        chunks persistable while retrieval safely falls back to BM25.
+        """
+        if not texts:
+            return []
+        try:
+            embeddings = self._embedding_service().generate_embeddings(texts)
+            return self.vector_service.add_vectors(embeddings)
+        except Exception:
+            logger.warning(
+                "Could not create semantic vectors for document %s; using BM25-only retrieval.",
+                document_id,
+                exc_info=True,
+            )
+            return list(range(-1, -len(texts) - 1, -1))
+
     @staticmethod
     def _embedding_service():
         return import_string(getattr(settings, 'EMBEDDING_SERVICE_CLASS', 'rag_app.services.embedding_service.EmbeddingService'))
@@ -56,21 +82,27 @@ class HybridRetrieverService:
             logger.warning(f"No document chunks found for user_id={user_id}, doc_id={document_id}, coll_id={collection_id}")
             return []
 
-        # 2. FAISS Semantic Search
-        query_vector = self._embedding_service().generate_single_embedding(query)
-        faiss_results = self.vector_service.search_vectors(query_vector, top_k=top_k * 3)
-
-        # Map vector_ids to authorized DocumentChunk models
-        faiss_vector_map = {r["vector_id"]: r["retrieval_score"] for r in faiss_results}
+        # 2. FAISS Semantic Search.  Embeddings are an enhancement, not a
+        # prerequisite for chat: BM25 below can still answer when the model
+        # is unavailable (for example during a first local run without a
+        # downloaded model or when the vector index is stale).
         semantic_chunks = []
-        for chunk in user_chunks:
-            if chunk.vector_id in faiss_vector_map:
-                semantic_chunks.append({
-                    "chunk": chunk,
-                    "score": faiss_vector_map[chunk.vector_id]
-                })
+        try:
+            query_vector = self._embedding_service().generate_single_embedding(query)
+            faiss_results = self.vector_service.search_vectors(query_vector, top_k=top_k * 3)
 
-        semantic_chunks.sort(key=lambda x: x["score"], reverse=True)
+            # Map vector_ids to authorized DocumentChunk models
+            faiss_vector_map = {r["vector_id"]: r["retrieval_score"] for r in faiss_results}
+            for chunk in user_chunks:
+                if chunk.vector_id in faiss_vector_map:
+                    semantic_chunks.append({
+                        "chunk": chunk,
+                        "score": faiss_vector_map[chunk.vector_id]
+                    })
+
+            semantic_chunks.sort(key=lambda x: x["score"], reverse=True)
+        except Exception:
+            logger.warning("Semantic retrieval unavailable; continuing with BM25.", exc_info=True)
 
         # 3. BM25 Keyword Search
         chunk_dicts = [{"id": c.id, "content": c.content, "obj": c} for c in user_chunks]
