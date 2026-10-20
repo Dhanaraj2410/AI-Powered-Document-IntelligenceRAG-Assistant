@@ -11,6 +11,14 @@
             <p class="text-muted small mb-0">Ask questions, find information, and get grounded answers with page-level citations.</p>
         </div>
         <div class="d-flex align-items-center gap-2">
+            <div class="btn-group btn-group-sm" role="group" aria-label="Export conversation">
+                <button type="button" class="btn btn-outline-light export-conversation-btn" data-format="pdf" {% if not active_conv %}disabled{% endif %} title="Download this conversation as PDF">
+                    <i class="bi bi-filetype-pdf me-1"></i> PDF
+                </button>
+                <button type="button" class="btn btn-outline-light export-conversation-btn" data-format="docx" {% if not active_conv %}disabled{% endif %} title="Download this conversation as Word document">
+                    <i class="bi bi-filetype-docx me-1"></i> DOCX
+                </button>
+            </div>
             <span class="badge text-light px-3 py-2 fw-bold shadow-sm" style="background-color: #059669 !important; border: 1px solid #34d399 !important; font-size: 0.85rem;">
                 <i class="status-dot status-dot-completed me-1"></i> FAISS + BM25 Hybrid Pipeline Ready
             </span>
@@ -39,6 +47,8 @@
                     <option value="{{ coll.id }}">📁 {{ coll.name }}</option>
                     {% endfor %}
                 </select>
+                <input type="hidden" id="chatSelectedDocId" value="{{ selected_doc_id }}">
+                <input type="hidden" id="chatSelectedCollectionId" value="{{ selected_collection_id }}">
                 <button id="clearChatScope" type="button" class="btn btn-sm btn-outline-secondary rounded-pill mt-2 w-100">
                     <i class="bi bi-x-circle me-1"></i> Clear document filters
                 </button>
