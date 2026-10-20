@@ -70,3 +70,40 @@ class APIEndpointsTestCase(TestCase):
         private_message = Message.objects.create(conversation=other_conversation, role='assistant', content='Private')
         response = self.client.post('/api/export/', {'message_id': private_message.id, 'format': 'pdf'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    @patch('rag_app.api.views_api.RAGService.query_rag')
+    def test_chat_returns_rag_result(self, query_rag):
+        query_rag.return_value = {
+            'conversation_id': 10,
+            'message_id': 20,
+            'answer': 'Grounded answer',
+            'sources': [],
+            'latency_metrics': {},
+            'grounding_result': {},
+        }
+        response = self.client.post('/api/chat/', {'question': 'What is in the report?'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['answer'], 'Grounded answer')
+
+    @patch('rag_app.api.views_api.RAGService.query_rag', side_effect=RuntimeError('backend unavailable'))
+    def test_chat_returns_json_error_when_rag_fails(self, query_rag):
+        response = self.client.post('/api/chat/', {'question': 'What is in the report?'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertIn('chat service', response.data['error'].lower())
+
+    @patch('rag_app.views.render')
+    def test_chat_scope_links_select_owned_document_and_collection(self, render):
+        collection = DocumentCollection.objects.create(user=self.user, name='Reports')
+        document = Document.objects.create(
+            user=self.user,
+            collection=collection,
+            title='Annual Report',
+            status='completed',
+        )
+        request = RequestFactory().get(f'/chat/?doc_id={document.id}&coll_id={collection.id}')
+        request.user = self.user
+        from rag_app.views import chat_view
+        chat_view(request)
+        context = render.call_args.args[2]
+        self.assertEqual(context['selected_doc_id'], str(document.id))
+        self.assertEqual(context['selected_collection_id'], str(collection.id))
