@@ -790,6 +790,31 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
 
+    document.querySelectorAll('.reprocess-doc-btn').forEach(btn => {
+        btn.onclick = () => {
+            const docId = btn.getAttribute('data-doc-id');
+            if (!docId || btn.disabled) return;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Processing...';
+
+            fetch(`/api/documents/${docId}/reprocess/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrfToken() }
+            })
+                .then(async response => {
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) throw new Error(data.detail || data.error || 'Unable to reprocess document.');
+                    return data;
+                })
+                .then(() => window.location.reload())
+                .catch(error => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Retry';
+                    alert(error.message);
+                });
+        };
+    });
+
     function escapeHtml(text) {
         if (!text) return '';
         return text
