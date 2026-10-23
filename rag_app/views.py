@@ -4,6 +4,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Count, Avg, Q
+from django.utils.http import url_has_allowed_host_and_scheme
 from rag_app.models import DocumentCollection, Document, Conversation, Message, Bookmark, Feedback, EvaluationResult
 
 def index_view(request):
@@ -46,7 +47,9 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
             messages.success(request, f"Welcome back, {user.username}!")
-            next_url = request.GET.get('next', 'dashboard')
+            next_url = request.GET.get('next', '')
+            if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                next_url = 'dashboard'
             return redirect(next_url)
         else:
             messages.error(request, "Invalid username or password.")
