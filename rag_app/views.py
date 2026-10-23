@@ -4,6 +4,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Count, Avg, Q
+from django.views.decorators.http import require_POST
 from django.utils.http import url_has_allowed_host_and_scheme
 from rag_app.models import DocumentCollection, Document, Conversation, Message, Bookmark, Feedback, EvaluationResult
 
@@ -59,6 +60,7 @@ def login_view(request):
     return render(request, 'login.html', {'form': form})
 
 
+@require_POST
 def logout_view(request):
     """User Logout view."""
     logout(request)

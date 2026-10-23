@@ -85,9 +85,12 @@
                     <a href="{% url 'chat' %}" class="btn btn-outline-info btn-sm rounded-pill px-4">
                         <i class="bi bi-chat-dots me-1"></i> Open RAG Chat
                     </a>
-                    <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm rounded-pill px-4">
-                        <i class="bi bi-box-arrow-right me-1"></i> Logout
-                    </a>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-4">
+                            <i class="bi bi-box-arrow-right me-1"></i> Logout
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
