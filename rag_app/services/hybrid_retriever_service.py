@@ -70,7 +70,10 @@ class HybridRetrieverService:
         if top_k < 1:
             return []
         # 1. Base queryset filtered strictly by user and document/collection
-        chunk_qs = DocumentChunk.objects.select_related('document').filter(document__user_id=user_id)
+        chunk_qs = DocumentChunk.objects.select_related('document').filter(
+            document__user_id=user_id,
+            document__status='completed',
+        )
 
         if document_id:
             chunk_qs = chunk_qs.filter(document_id=document_id)
