@@ -5,8 +5,8 @@ from .cleaner_service import CleanerService
 
 class ChunkerService:
     def __init__(self, chunk_size: int = None, chunk_overlap: int = None):
-        self.chunk_size = chunk_size or getattr(settings, 'CHUNK_SIZE', 1000)
-        self.chunk_overlap = chunk_overlap or getattr(settings, 'CHUNK_OVERLAP', 150)
+        self.chunk_size = getattr(settings, 'CHUNK_SIZE', 1000) if chunk_size is None else chunk_size
+        self.chunk_overlap = getattr(settings, 'CHUNK_OVERLAP', 150) if chunk_overlap is None else chunk_overlap
         if self.chunk_size <= 0:
             raise ValueError("chunk_size must be positive")
         if self.chunk_overlap < 0 or self.chunk_overlap >= self.chunk_size:
