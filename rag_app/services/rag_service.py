@@ -228,8 +228,8 @@ class RAGService:
         # 5. Format Source Citations with Explainability Reasons
         sources_data = []
         for idx, item in enumerate(reranked_chunks, 1):
-            score_val = item.get("retrieval_score", 0.85)
-            reason_text = f"Extracted from page {item.get('page_number', 1)} with similarity score {score_val}. Contains text matching keywords and semantic context from your question."
+            score_val = item.get("retrieval_score")
+            reason_text = f"Selected from page {item.get('page_number', 1)} with retrieval score {score_val}."
             sources_data.append({
                 "source_index": idx,
                 "document_id": item["document_id"],
