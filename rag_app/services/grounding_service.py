@@ -1,4 +1,5 @@
 from typing import List, Dict
+import re
 
 class GroundingService:
     @staticmethod
@@ -30,13 +31,17 @@ class GroundingService:
             }
 
         # Check word overlap between answer and retrieved context
-        context_text = " ".join(c.get("content", "").lower() for c in retrieved_chunks)
-        answer_words = set(w for w in answer_lower.split() if len(w) > 3)
+        context_words = set(re.findall(r"\w+", " ".join(
+            c.get("content", "") for c in retrieved_chunks
+        ).lower()))
+        answer_words = set(
+            word for word in re.findall(r"\w+", answer_lower) if len(word) > 3
+        )
 
         if not answer_words:
             return {"is_grounded": True, "faithfulness_score": 0.8, "notes": "Short answer"}
 
-        matches = sum(1 for w in answer_words if w in context_text)
+        matches = sum(1 for word in answer_words if word in context_words)
         faithfulness = round(matches / len(answer_words), 2)
         is_grounded = faithfulness >= 0.35
 
