@@ -85,7 +85,7 @@ PostgreSQL / SQLite            PyMuPDF                      Sentence            
 - 🔀 **Multi-Document Comparison (`/compare/`)**: Side-by-side document diffs comparing scope, financial metrics, and operational changes.
 - ⭐ **Bookmarks (`/bookmarks/`)**: Save important Q&A answers and citations grid.
 - 📊 **Analytics (`/analytics/`)**: Usage dashboard tracking query counts, response speed, user feedback %, and document storage.
-- 🧪 **RAG Evaluation (`/evaluation/`)**: Benchmark evaluation metrics displaying Precision@K (89%), MRR (0.91), Faithfulness (94%), and Latency.
+- 🧪 **RAG Evaluation (`/evaluation/`)**: Displays Precision@K, MRR, grounding, relevance, and latency from the latest recorded benchmark run; metrics remain blank until a run is recorded.
 - 👤 **Profile (`/profile/`)**: User account details and storage quota metrics.
 
 ---

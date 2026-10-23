@@ -229,7 +229,16 @@ def analytics_view(request):
     feedbacks = Feedback.objects.filter(user=request.user)
     total_feedbacks = feedbacks.count()
     positive_feedbacks = feedbacks.filter(rating=1).count()
-    positive_pct = int((positive_feedbacks / total_feedbacks) * 100) if total_feedbacks > 0 else 92
+    positive_pct = round((positive_feedbacks / total_feedbacks) * 100) if total_feedbacks > 0 else None
+
+    assistant_messages = Message.objects.filter(
+        conversation__user=request.user, role='assistant'
+    ).values_list('latency_metrics', flat=True)
+    latencies_ms = [
+        metrics.get('total_ms') for metrics in assistant_messages
+        if isinstance(metrics, dict) and isinstance(metrics.get('total_ms'), (int, float))
+    ]
+    avg_latency = round(sum(latencies_ms) / len(latencies_ms) / 1000, 2) if latencies_ms else None
 
     documents = Document.objects.filter(user=request.user)
 
@@ -239,7 +248,7 @@ def analytics_view(request):
             'total_documents': documents.count(),
             'total_conversations': user_convs.count(),
             'positive_feedback_pct': positive_pct,
-            'avg_latency': 1.8
+            'avg_latency': avg_latency
         },
         'documents': documents[:5]
     }

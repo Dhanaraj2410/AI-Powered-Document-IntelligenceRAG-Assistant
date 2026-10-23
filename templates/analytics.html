@@ -27,8 +27,8 @@
         <div class="col-md-3">
             <div class="glass-card p-4 text-center h-100 border-warning">
                 <div class="text-warning fw-bold small text-uppercase mb-1"><i class="bi bi-lightning-fill me-1"></i> Response Speed</div>
-                <div class="display-5 fw-bold text-warning my-2">{{ stats.avg_latency }}s</div>
-                <div class="small text-light">Average RAG Response Latency</div>
+                <div class="display-5 fw-bold text-warning my-2">{% if stats.avg_latency != None %}{{ stats.avg_latency }}s{% else %}—{% endif %}</div>
+                <div class="small text-light">Average measured RAG response latency</div>
             </div>
         </div>
 
@@ -36,8 +36,8 @@
         <div class="col-md-3">
             <div class="glass-card p-4 text-center h-100 border-success">
                 <div class="text-success fw-bold small text-uppercase mb-1"><i class="bi bi-hand-thumbs-up-fill me-1"></i> User Satisfaction</div>
-                <div class="display-5 fw-bold text-success my-2">{{ stats.positive_feedback_pct }}%</div>
-                <div class="small text-light">Positive AI Answer Ratings</div>
+                <div class="display-5 fw-bold text-success my-2">{% if stats.positive_feedback_pct != None %}{{ stats.positive_feedback_pct }}%{% else %}—{% endif %}</div>
+                <div class="small text-light">{% if stats.positive_feedback_pct != None %}Positive AI answer ratings{% else %}No feedback ratings yet{% endif %}</div>
             </div>
         </div>
 
