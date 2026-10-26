@@ -20,6 +20,12 @@ class QueryRewriterService:
         if len(words) > 10:
             return question
 
+        # A local fallback is intentionally document-grounded and cannot
+        # rewrite a follow-up reliably. Avoid turning its fallback sentence
+        # into the search query when no remote provider is configured.
+        if not LLMService.is_configured():
+            return question
+
         # Build context prompt for rewriter
         recent_history_str = ""
         for msg in history[-4:]:
@@ -52,7 +58,11 @@ Output ONLY the rewritten standalone question string. Do NOT add extra explanati
             rewritten = re.sub(r'^(Rewritten Question|Query|Standalone Question):\s*', '', rewritten, flags=re.IGNORECASE)
             rewritten = rewritten.strip('"\'')
 
-            if len(rewritten) > 5 and len(rewritten) < 200:
+            if (
+                len(rewritten) > 5
+                and len(rewritten) < 200
+                and 'could not find this information' not in rewritten.lower()
+            ):
                 logger.info(f"Query Rewriter: '{question}' -> '{rewritten}'")
                 return rewritten
 
