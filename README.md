@@ -141,7 +141,7 @@ The relevant `.env` settings look like this:
 SECRET_KEY=paste-your-generated-key-here
 DEBUG=True
 GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-1.5-flash
+GEMINI_MODEL=gemini-3.8-flash
 EMBEDDING_MODEL_NAME=all-MiniLM-L6-v2
 CHUNK_SIZE=1000
 CHUNK_OVERLAP=150
