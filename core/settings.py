@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'rag_app.middleware.AuditLogMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -180,6 +181,14 @@ VECTOR_SERVICE_CLASS = os.getenv('VECTOR_SERVICE_CLASS', 'rag_app.services.vecto
 
 VECTOR_STORE_DIR = BASE_DIR / 'data' / 'vector_store'
 UPLOADS_DIR = BASE_DIR / 'data' / 'uploads'
+
+# Rate-limiting config for LLM API calls (tokens / minute)
+LLM_RATE_LIMIT_CALLS = int(os.getenv('LLM_RATE_LIMIT_CALLS', '60'))
+LLM_RATE_LIMIT_PERIOD = int(os.getenv('LLM_RATE_LIMIT_PERIOD', '60'))
+
+# In-memory cache TTL settings (seconds)
+QUERY_CACHE_TTL = int(os.getenv('QUERY_CACHE_TTL', '300'))       # 5 minutes
+EMBEDDING_CACHE_TTL = int(os.getenv('EMBEDDING_CACHE_TTL', '1800'))  # 30 minutes
 
 # Ensure directories exist
 os.makedirs(VECTOR_STORE_DIR, exist_ok=True)
