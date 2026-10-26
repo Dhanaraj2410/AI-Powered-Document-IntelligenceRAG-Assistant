@@ -7,6 +7,10 @@ from rag_app.services.llm_service import LLMService
 
 
 class LLMServiceTests(SimpleTestCase):
+    @override_settings(GEMINI_API_KEY='real-key', OPENAI_API_KEY='')
+    def test_provider_configuration_detects_real_gemini_key(self):
+        self.assertTrue(LLMService.is_configured())
+
     @override_settings(GEMINI_API_KEY='test-key', GEMINI_MODEL='gemini-3.8-flash')
     @patch('google.genai.Client')
     def test_gemini_is_used_with_configured_model(self, client_class):
