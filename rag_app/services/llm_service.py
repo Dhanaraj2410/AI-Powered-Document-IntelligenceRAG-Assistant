@@ -6,6 +6,16 @@ logger = logging.getLogger(__name__)
 
 class LLMService:
     @staticmethod
+    def is_configured() -> bool:
+        """Return whether at least one remote answer provider is configured."""
+        gemini_key = (getattr(settings, 'GEMINI_API_KEY', '') or '').strip()
+        openai_key = (getattr(settings, 'OPENAI_API_KEY', '') or '').strip()
+        return bool(
+            (gemini_key and gemini_key != 'your_gemini_api_key_here')
+            or (openai_key and openai_key != 'your_openai_api_key_here')
+        )
+
+    @staticmethod
     def generate_response(messages: list) -> dict:
         """
         Communicates with LLM API (Google Gemini API or OpenAI API) to generate grounded RAG response.
@@ -15,7 +25,8 @@ class LLMService:
             dict: {"success": bool, "content": str, "error": str}
         """
         gemini_key = getattr(settings, 'GEMINI_API_KEY', '') or ''
-        gemini_model_name = getattr(settings, 'GEMINI_MODEL', 'gemini-3.6-flash')
+        # Keep a valid public Gemini default; deployments can override it.
+        gemini_model_name = getattr(settings, 'GEMINI_MODEL', 'gemini-3.8-flash')
 
         openai_key = getattr(settings, 'OPENAI_API_KEY', '') or ''
         openai_model_name = getattr(settings, 'OPENAI_MODEL', 'gpt-4o-mini')
@@ -24,17 +35,27 @@ class LLMService:
         if gemini_key and gemini_key != 'your_gemini_api_key_here':
             try:
                 from google import genai
+                from google.genai import types
                 client = genai.Client(api_key=gemini_key)
 
                 # Format messages array into combined text prompt for Gemini
+                system_prompt = next(
+                    (m.get('content', '') for m in messages if m.get('role') == 'system'),
+                    '',
+                )
                 combined_prompt = LLMService._format_messages_for_gemini(messages)
                 
-                # Use configured gemini model name (fallback to gemini-3.6-flash)
-                target_model = gemini_model_name if 'gemini' in gemini_model_name else 'gemini-3.6-flash'
+                # Use the configured model, falling back to a known public model.
+                target_model = gemini_model_name if gemini_model_name.startswith('gemini-') else 'gemini-3.8-flash'
 
                 response = client.models.generate_content(
                     model=target_model,
-                    contents=combined_prompt
+                    contents=combined_prompt,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_prompt or None,
+                        temperature=0.2,
+                        max_output_tokens=1200,
+                    ),
                 )
 
                 answer_text = response.text.strip() if response and response.text else ""
@@ -70,7 +91,14 @@ class LLMService:
                 logger.warning(f"OpenAI API call failed: {str(e)}. Falling back to local context synthesis generator.")
 
         # --- Priority 3: Local RAG Context Synthesis Generator ---
-        return LLMService._synthesize_answer_from_context(messages)
+        fallback = LLMService._synthesize_answer_from_context(messages)
+        if not fallback.get('content') or fallback.get('content') == 'I could not find this information in the uploaded documents.':
+            return {
+                'success': False,
+                'content': 'The AI provider is temporarily unavailable. Please check the Gemini model/API configuration and try again.',
+                'error': 'No configured language model returned an answer.'
+            }
+        return fallback
 
     @staticmethod
     def _format_messages_for_gemini(messages: list) -> str:
