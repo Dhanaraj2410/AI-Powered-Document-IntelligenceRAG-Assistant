@@ -27,7 +27,7 @@ class GroundingService:
             return {
                 "is_grounded": False,
                 "faithfulness_score": 0.0,
-                "notes": "Answer generated without retrieved context."
+                "notes": "General answer: no document context was selected."
             }
 
         # Check word overlap between answer and retrieved context
