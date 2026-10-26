@@ -203,11 +203,10 @@ class RAGService:
 
         # 3. Prompt & LLM Generation
         t_llm_start = time.time()
-        if reranked_chunks:
-            prompt_data = PromptService.build_qa_prompt(question, reranked_chunks, formatted_history)
-            llm_response = LLMService.generate_response(prompt_data["messages"])
-        else:
-            llm_response = {"content": "I could not find this information in the uploaded documents.", "success": True}
+        # Retrieval can be empty for general questions. Still call the LLM so
+        # this endpoint behaves as an AI chatbot as well as a document assistant.
+        prompt_data = PromptService.build_qa_prompt(question, reranked_chunks, formatted_history)
+        llm_response = LLMService.generate_response(prompt_data["messages"])
         t_llm_end = time.time()
         llm_ms = int((t_llm_end - t_llm_start) * 1000)
 
