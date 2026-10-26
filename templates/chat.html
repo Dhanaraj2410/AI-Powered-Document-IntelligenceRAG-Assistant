@@ -7,7 +7,7 @@
     <!-- Top Header Banner -->
     <div class="d-flex justify-content-between align-items-center mb-3 px-2 flex-wrap gap-2">
         <div>
-            <h4 class="fw-bold mb-0 text-light font-heading"><i class="bi bi-robot text-info me-2" aria-hidden="true"></i> Document chat</h4>
+        <h4 class="fw-bold mb-0 text-light font-heading"><i class="bi bi-robot text-info me-2" aria-hidden="true"></i> AI chat</h4>
             <p class="text-muted small mb-0">Ask questions, find information, and get grounded answers with page-level citations.</p>
         </div>
         <div class="d-flex align-items-center gap-2">
@@ -24,6 +24,18 @@
             </span>
         </div>
     </div>
+
+    {% if gemini_configured %}
+    <div class="alert alert-success py-2 px-3 small mb-3" role="status">
+        <i class="bi bi-check-circle-fill me-1"></i>
+        Gemini AI is connected. Ask about your documents or any general question; document answers include citations when relevant.
+    </div>
+    {% else %}
+    <div class="alert alert-warning py-2 px-3 small mb-3" role="status">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        Gemini AI is not configured. Add a real <code>GEMINI_API_KEY</code> to <code>.env</code> and restart Django for full AI answers.
+    </div>
+    {% endif %}
 
     <!-- 3-Column Proportional Workspace Layout -->
     <div class="row g-3">
@@ -181,7 +193,7 @@
                 <div class="chat-composer p-3 border-top border-secondary bg-dark rounded-bottom">
                     <form id="chatForm" class="d-flex gap-2 align-items-center" aria-label="Ask a question about your documents">
                         <label for="chatInput" class="visually-hidden">Your question</label>
-                        <textarea id="chatInput" class="form-control bg-dark text-light border-secondary rounded-4 px-3 py-2" placeholder="Ask something about your documents..." required autocomplete="off" rows="1" maxlength="2000" aria-describedby="chatInputHint chatCharCount"></textarea>
+                        <textarea id="chatInput" class="form-control bg-dark text-light border-secondary rounded-4 px-3 py-2" placeholder="Ask about your documents or anything else..." required autocomplete="off" rows="1" maxlength="2000" aria-describedby="chatInputHint chatCharCount"></textarea>
                         <button id="chatSubmitButton" type="submit" class="btn btn-info rounded-pill px-4 fw-bold text-dark d-flex align-items-center gap-1">
                             <span>Ask</span> <i class="bi bi-send-fill"></i>
                         </button>
